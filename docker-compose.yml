@@ -1,0 +1,100 @@
+# MarginPilot — local development stack (HTTP only; production TLS is separate).
+# Secrets come from .env (never committed). Docker Engine + Compose v2 required.
+name: marginpilot
+
+services:
+  postgres:
+    # Tag verified + digest pinned: download/evidence/image_digests.json
+    image: postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks: [internal]
+    restart: unless-stopped
+    # Deliberately NO ports section: PostgreSQL is reachable only inside the
+    # compose network (security constraint — never expose the DB publicly).
+
+  backend:
+    build: ./backend
+    image: marginpilot/backend:0.1.0
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: json
+      # P2-04: this URL is built by STRING INTERPOLATION, so POSTGRES_USER,
+      # POSTGRES_PASSWORD and POSTGRES_DB must be URL-safe (ASCII letters,
+      # digits and `-_.~` only; no @ : / ? # % & = + space). The password
+      # constraint and safe generation commands are documented in README
+      # ("Environment variables" section) and .env.example. No real password
+      # is stored in this repository — .env is git-ignored.
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # Real readiness check: actual SELECT 1 inside the backend.
+      test: ["CMD", "python", "-c", "import urllib.request as u,sys; r=u.urlopen('http://127.0.0.1:8000/health/ready', timeout=3); sys.exit(0 if r.status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks: [internal]
+    restart: unless-stopped
+    # Deliberately NO ports: the backend is NOT reachable from the internet —
+    # Caddy is the single HTTP entrypoint.
+
+  frontend:
+    build: ./frontend
+    image: marginpilot/frontend:0.1.0
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks: [internal]
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
+    ports:
+      - "8080:8080" # local development HTTP — the ONLY published port
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    healthcheck:
+      # P2-03: real HTTP check against Caddy's own /healthz endpoint
+      # (Caddyfile `handle /healthz { respond 200 }`) — served by Caddy
+      # itself, no upstream dependency. wget is busybox's, present in the
+      # caddy:2-alpine image.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks: [internal]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge

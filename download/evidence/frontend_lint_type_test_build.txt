@@ -1,0 +1,33 @@
+=== eslint ===
+
+> marginpilot-frontend@0.1.0 lint
+> eslint .
+
+LINT OK
+=== type-check ===
+
+> marginpilot-frontend@0.1.0 type-check
+> tsc -b
+
+TSC OK
+=== vitest ===
+
+> marginpilot-frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /home/z/my-project/frontend
+
+ ✓ src/features/welcome/WelcomePage.test.tsx (3 tests) 45ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  19:28:36
+   Duration  728ms (environment 66%, import 15%, transform 11%, tests 7%, worker 1%)
+
+VITEST OK
+=== build ===
+dist/assets/index-BTjQClLI.css                     7.17 kB │ gzip:  2.28 kB
+dist/assets/index-Dz-8i4hN.js                    292.12 kB │ gzip: 91.92 kB
+
+✓ built in 265ms

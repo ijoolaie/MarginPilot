@@ -1,0 +1,153 @@
+# MarginPilot CI — Phase 2 / Step 1 (infrastructure foundation).
+# Real PostgreSQL service (no SQLite, no mocks). No migrations yet — the
+# schema arrives in Phase 3, so only the real connection + readiness path is
+# exercised. Every gate below is mandatory: a failure fails the whole CI.
+
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (lint, types, tests, real PG)
+    runs-on: ubuntu-latest
+    services:
+      # Stage 8: real PostgreSQL service. Pinned to the SAME verified digest
+      # as docker-compose.yml (evidence: download/evidence/image_digests.json,
+      # tag 16-alpine) — CI and Compose run byte-identical images.
+      postgres:
+        image: postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
+        env:
+          POSTGRES_USER: marginpilot
+          POSTGRES_PASSWORD: ci-test-password
+          POSTGRES_DB: marginpilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U marginpilot -d marginpilot"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # CI-only throwaway credentials — not repository secrets.
+      DATABASE_URL: postgresql+psycopg://marginpilot:ci-test-password@localhost:5432/marginpilot
+    steps:
+      - name: 1. Checkout
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 4. Install dependencies from hashed lock
+        run: pip install --require-hashes -r backend/requirements.lock
+
+      - name: 5. Ruff
+        working-directory: backend
+        run: ruff check app tests
+
+      - name: 6. mypy (strict)
+        working-directory: backend
+        run: mypy app
+
+      - name: 7. Backend unit tests
+        working-directory: backend
+        run: pytest
+
+      - name: 7b. Backend smoke over real uvicorn (no DB reachable -> ready 503)
+        working-directory: backend
+        run: |
+          DATABASE_URL="postgresql+psycopg://marginpilot:smokepw@127.0.0.1:59999/none" \
+            uvicorn app.main:app --host 127.0.0.1 --port 8021 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://127.0.0.1:8021/health/live && break; sleep 1
+          done
+          live=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8021/health/live)
+          ready=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8021/health/ready)
+          test "$live" = "200" || { echo "live expected 200, got $live"; exit 1; }
+          test "$ready" = "503" || { echo "ready expected 503 (unreachable DB), got $ready"; exit 1; }
+          kill %1
+
+      - name: 9. Real PostgreSQL readiness (integration, no migrations by design)
+        working-directory: backend
+        run: pytest -m integration
+
+  frontend:
+    name: Frontend (lint, types, vitest, build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout
+        uses: actions/checkout@v4
+
+      - name: 3. Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 4. Install dependencies (npm ci from lock file)
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: 10. Frontend lint + type-check
+        working-directory: frontend
+        run: |
+          npm run lint
+          npm run type-check
+
+      - name: 11. Vitest
+        working-directory: frontend
+        run: npm test
+
+      - name: 12. Frontend production build
+        working-directory: frontend
+        run: npm run build
+
+      - name: 15. npm audit
+        working-directory: frontend
+        run: npm audit
+
+  docker:
+    name: Docker build (backend + frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout
+        uses: actions/checkout@v4
+
+      - name: 13. Build backend image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+
+      - name: 13. Build frontend image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+
+  security-audit:
+    name: Dependency + secret scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans full history
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 14. pip-audit (hashed lock)
+        run: |
+          pip install --quiet pip-audit==2.10.1
+          pip-audit --require-hashes -r backend/requirements.lock
+
+      - name: 16. gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

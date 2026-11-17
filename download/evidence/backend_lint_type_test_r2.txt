@@ -1,0 +1,16 @@
+=== RUFF (ruff check app tests) — 2026-11-17 05:03 UTC — deps reinstalled from hashed requirements.lock (sandbox venv was recycled) ===
+All checks passed!
+exit=0
+
+=== MYPY STRICT (mypy app) ===
+Success: no issues found in 22 source files
+exit=0
+
+=== P2-05 tests (verbose) ===
+========================= 8 passed, 1 warning in 0.67s =========================
+
+=== PYTEST UNIT (all) ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+39 passed, 3 deselected, 1 warning in 1.75s
+exit=0

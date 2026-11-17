@@ -1,0 +1,6 @@
+DATABASE_URL (socket, no password): postgresql+psycopg://postgres:@/postgres?host=/tmp/mp-pgdata
+=== pytest -m integration (real PostgreSQL 16.2, embedded) ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 36 deselected, 1 warning in 0.69s
+exit=0

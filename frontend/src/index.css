@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "vazirmatn/Vazirmatn-font-face.css";
+
+/* Vazirmatn is self-hosted via the npm package (bundled by Vite). */
+@theme {
+  --font-sans: "Vazirmatn", "Tahoma", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}

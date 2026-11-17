@@ -1,0 +1,45 @@
+# MarginPilot — Caddy reverse proxy (ONLY HTTP entrypoint).
+# Development configuration: plain HTTP on :8080 (NO TLS here — production TLS
+# is configured separately at deployment; do not mix them).
+
+:8080 {
+	encode gzip
+
+	# P2-03: self health endpoint — Caddy answers 200 directly, no upstream
+	# involved. Used by the caddy healthcheck in docker-compose.yml via
+	# wget (busybox, present in the alpine image).
+	handle /healthz {
+		respond 200
+	}
+
+	# Security headers for everything served through this entrypoint.
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	# Backend health endpoints live at /health/*; the SPA calls them as
+	# /api/health/* through the same /api entrypoint used by the real API.
+	handle /api/health/* {
+		uri strip_prefix /api
+		reverse_proxy backend:8000
+	}
+
+	# API contract: /api/v1/* reaches the backend untouched.
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# Everything else: static SPA (nginx, unprivileged, internal only).
+	handle {
+		reverse_proxy frontend:8080
+	}
+}
+
+# PRODUCTION TEMPLATE (not active in development — documented only):
+# marginpilot.example.com {
+# 	tls internal   # or ACME email config
+# 	...same handle blocks...
+# }

@@ -1,0 +1,67 @@
+MarginPilot — Phase 1 Archive Verification Manifest
+Generated (UTC): 2026-11-16 18:57:18
+Git HEAD: a7d473902f6766fd8f2f077c7823c810ab3fae9b (branch: main)
+NOTE: the agent performs NO commit/push/merge; checkpoint commits with
+      UUID messages are created automatically by the session harness.
+NOTE: .git is intentionally NOT archived; this manifest is the git-state
+      evidence (HEAD, working-tree status, .env ignore proof).
+
+Working tree (git status --porcelain):
+ M .env.example
+ M .gitignore
+ M README.md
+ M backend/app/__init__.py
+ M backend/app/api/__init__.py
+ M backend/app/api/v1/__init__.py
+ M backend/app/core/__init__.py
+ M backend/app/modules/analytics/__init__.py
+ M backend/app/modules/audit/__init__.py
+ M backend/app/modules/catalog/__init__.py
+ M backend/app/modules/comparison/__init__.py
+ M backend/app/modules/expenses/__init__.py
+ M backend/app/modules/identity/__init__.py
+ M backend/app/modules/imports/__init__.py
+ M backend/app/modules/pricing/__init__.py
+ M backend/app/modules/reporting/__init__.py
+ M backend/app/modules/sales/__init__.py
+ M backend/app/modules/tenancy/__init__.py
+ M backend/tests/__init__.py
+ M docs/api-contract.md
+ M docs/architecture.md
+ M docs/calculation-principles.md
+ M docs/data-model.md
+ M docs/decisions.md
+ M docs/dependencies.md
+ M docs/environment-limitations.md
+ M docs/security.md
+ M docs/testing-strategy.md
+ M download/PHASE1_MANIFEST.txt
+ M download/Phase0_Environment_Audit_Report.md
+ M download/Phase1_Architecture_Report.md
+ M download/Phase1_Corrective_Review_Report.md
+ M download/Phase1_Final_Corrections_Report.md
+ M download/Phase1_Final_Corrections_Report_v2.md
+ M download/marginpilot-phase1-20261116.zip
+ M scripts/make_phase1_zip.sh
+?? PHASE1_MANIFEST.txt
+?? download/Phase1_Final_Corrections_Report_v3.md
+
+.env ignored by git: YES
+.env present in worktree: YES (excluded from archive)
+.env.example inside archive: YES (re-added explicitly after excludes)
+
+Archive composition: 36 real files · 20 directories · 56 entries
+  (includes PHASE1_MANIFEST.txt; verified after zipping — script fails on mismatch)
+
+SHA-256 of design files — each verified byte-for-byte against archive contents:
+MATCH  476ab1a6d954cbbe19e2535d0b1f93450ecd99c58c2b1d1936a6b77bef435862  .env.example
+MATCH  782e8bdcda151843555a1788791d82583961b32b0015c3db200d8f9b9c6a948e  README.md
+MATCH  fb72ab734f8c74d875389d439f62bba917638131cf51ca10acee67cd1ce7d5f6  docs/api-contract.md
+MATCH  cc15188d1bde9330889df9aa291d57ac71b220009f37235e5aadc3e268c976b5  docs/architecture.md
+MATCH  895cdea480a6a9b0463224b6eda73832b8ff3715c577f53af9f16607e0e90155  docs/calculation-principles.md
+MATCH  a5689065e154702a09c483632a2beaedae00051c4c9f4fb1b6552380e6f80c00  docs/data-model.md
+MATCH  edda20f22ef1d0b48fa55c6a045cc5805907889da2c900fcc7fc33adc19a73c4  docs/decisions.md
+MATCH  2c5c9f270072166e5f466651604a8a888379cf5fbdd8a6639ea6e879a13eaa0b  docs/dependencies.md
+MATCH  63bc796e84cedc3524a8860a5d41ac8091bf8363db4262f5d1ff5f2a6e71e236  docs/environment-limitations.md
+MATCH  655dfead6b101eccbaf4e23e7a7a9ffd0611d150bc1be95275af47249695ffe3  docs/security.md
+MATCH  d12ca486ecdfa6c7b96ec460293aae6a9cb189d15b14a32ede5e921e664b0720  docs/testing-strategy.md

@@ -1,0 +1,4 @@
+DATABASE_URL (socket, no password): postgresql+psycopg://***@/postgres?host=/tmp/mp-pgdata
+=== pytest -m integration (real PostgreSQL, embedded) — 2026-11-17 05:03 UTC ===
+================= 3 passed, 39 deselected, 1 warning in 0.64s ==================
+exit=0

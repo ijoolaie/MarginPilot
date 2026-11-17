@@ -1,0 +1,2 @@
+=== pip-audit after bump ===
+No known vulnerabilities found

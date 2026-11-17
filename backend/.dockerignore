@@ -1,0 +1,15 @@
+# Everything except the runtime application ships out of the image.
+tests
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.env
+.env.*
+*.lock
+!requirements-runtime.lock
+Dockerfile
+.dockerignore

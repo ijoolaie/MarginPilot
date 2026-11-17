@@ -1,0 +1,36 @@
+# --- Sandbox workspace (pre-existing) ---
+skills/
+
+# --- Environment & secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+build/
+dist/
+
+# --- Node / Frontend ---
+node_modules/
+
+# --- Logs & temp ---
+*.log
+tmp/
+upload-tmp/
+
+# --- Editors / OS ---
+.DS_Store
+.idea/
+.vscode/

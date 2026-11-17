@@ -1,0 +1,52 @@
+########## Phase A: DATABASE UNREACHABLE ##########
+--- GET /health/live (phase A) ---
+HTTP/1.1 200 OK
+date: Mon, 16 Nov 2026 19:24:34 GMT
+server: uvicorn
+content-length: 18
+content-type: application/json
+x-request-id: 6bcf06df47974fdb920660ab448a5616
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+content-security-policy: default-src 'self'
+permissions-policy: camera=(), microphone=(), geolocation=()
+vary: Origin
+
+--- GET /health/ready (phase A: failure path) ---
+HTTP/1.1 503 Service Unavailable
+date: Mon, 16 Nov 2026 19:24:34 GMT
+server: uvicorn
+retry-after: 5
+content-length: 55
+content-type: application/json
+x-request-id: e360d257a7094980951897be587dcdb3
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+content-security-policy: default-src 'self'
+permissions-policy: camera=(), microphone=(), geolocation=()
+
+
+########## Phase B: REAL PostgreSQL (embedded 16.2) ##########
+DSN host part: postgresql+psycopg://postgres:***@/postgres?host=/tmp/mp-pgdata
+--- GET /health/ready (phase B: success path) ---
+HTTP/1.1 200 OK
+date: Mon, 16 Nov 2026 19:24:35 GMT
+server: uvicorn
+content-length: 45
+content-type: application/json
+x-request-id: c387604dc8384c13a64e36a247bfe1aa
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+content-security-policy: default-src 'self'
+permissions-policy: camera=(), microphone=(), geolocation=()
+vary: Origin
+
+
+########## JSON access-log sample (phase B) ##########
+{"ts":"2026-11-16T19:24:35.789+00:00","level":"INFO","logger":"marginpilot.app","event":"http_request","request_id":"b29a027c954549f8ba89fd9f22fa59d7","method":"GET","path":"/health/live","status":200,"duration_ms":1.5}
+{"ts":"2026-11-16T19:24:35.871+00:00","level":"INFO","logger":"marginpilot.app","event":"http_request","request_id":"c387604dc8384c13a64e36a247bfe1aa","method":"GET","path":"/health/ready","status":200,"duration_ms":74.2}
+
+SMOKE DONE

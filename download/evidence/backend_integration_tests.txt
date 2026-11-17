@@ -1,0 +1,6 @@
+DATABASE_URL=postgresql+psycopg://postgres:***@/postgres?host=/tmp/mp-pgdata
+=== pytest -m integration (real PG 16.2) ===
+    self.loader.exec_module(module)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 0 failed — real PostgreSQL 16.2 (embedded, socket DSN), exit 0

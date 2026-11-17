@@ -1,0 +1,8 @@
+=== uvicorn smoke from backend/ dir (unreachable DB -> ready 503; error-path headers) ===
+GET /health/live  -> 200
+GET /health/ready -> 503 (DB unreachable by design)
+--- error-path response headers (404) ---
+x-request-id: c3f40f5cd4fe4ff79a4fb3f0818bc5c1
+x-content-type-options: nosniff
+x-frame-options: DENY
+smoke done

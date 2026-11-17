@@ -1,0 +1,13 @@
+=== RUFF (ruff check app tests) — 2026-11-16 20:01 UTC ===
+All checks passed!
+exit=0
+
+=== MYPY STRICT (mypy app) ===
+Success: no issues found in 22 source files
+exit=0
+
+=== PYTEST UNIT ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+36 passed, 3 deselected, 1 warning in 1.74s
+exit=0

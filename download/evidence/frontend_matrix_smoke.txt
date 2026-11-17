@@ -1,0 +1,22 @@
+=== npm install (typescript 6.0.3) ===
+62 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+INSTALL OK
+=== tsc -b ===
+TSC OK
+=== vite build ===
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 905ms
+BUILD OK
+=== vitest run ===
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  19:26:42
+   Duration  685ms (environment 76%, import 14%, transform 5%, tests 3%, worker 1%)
+

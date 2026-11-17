@@ -1,0 +1,4 @@
+os.environ.get -> postgresql+psycopg://u:p@h:5432/d
+iterable -> True
+pydantic-settings 2.13.1: env-source FAIL: ValidationError
+explicit init kwargs: OK

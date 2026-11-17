@@ -1,0 +1,39 @@
+MarginPilot — Phase 2 / Step 1 Archive Verification Manifest
+Generated (UTC): 2026-11-16 19:40:56
+Git HEAD: c8f9da649908ffa314587d6feadf8193c59c51cb (branch: main)
+NOTE: the agent performs NO commit/push/merge; checkpoint commits with
+      UUID messages are created automatically by the session harness.
+NOTE: .git is intentionally NOT archived; this manifest is the git-state
+      evidence (HEAD, working-tree status, .env ignore proof).
+
+Working tree (git status --porcelain):
+?? PHASE2_MANIFEST.txt
+?? download/marginpilot-phase2-step1-20261116.zip
+?? scripts/make_phase2_zip.sh
+
+.env ignored by git: YES
+.env present in worktree: YES (excluded from archive)
+.env.example inside archive: YES (re-added explicitly after excludes)
+node_modules / caches / dist inside archive: NO (hard-fail guards passed)
+
+Archive composition: 104 real files · 31 directories · 135 entries
+  (includes PHASE2_MANIFEST.txt; verified after zipping — script fails on mismatch)
+
+SHA-256 of key files — each verified byte-for-byte against archive contents:
+MATCH  a0822d1944afe782d9aaddde0bac78ff830cddeae3241cb737b5c7669821e5a7  .env.example
+MATCH  fbe1bc121ae0e635450e26046d513108a0fe67d990d3d55df2ee4845f839ff7f  README.md
+MATCH  aac08244abe9dabb72c451a55915239aaf3c085e9e052ae667dac92f2fba675e  CHANGELOG.md
+MATCH  dc86efd4d594443c9a064b003fcbb22da0a5cea93aec80f7b01b2799b3315755  SECURITY.md
+MATCH  fc839ee0747d2e2fddae77fad114a5c1bbf11a4315b656eb5935aa8a6058e303  docker-compose.yml
+MATCH  b10ff4e535086b26e9e8902a57a853a43f7a6dba3d55f10b9bc9c4f6b0fb4663  Caddyfile
+MATCH  80eb88f2ccd78fadc7d06f74eb810322d8dc99305c1eaf165a0b2209d49f0621  .github/workflows/ci.yml
+MATCH  946270ea295372e406f7e3fd2cf657af9cd370ca50f687df35ca2156e3a16b07  backend/pyproject.toml
+MATCH  14715d2140fbc6142de2524a76b17176d062ff51f1037bb7183e8382c12d14a4  backend/requirements.lock
+MATCH  01591ffd3487d0b974ba3f10ae249dedcd26761222022673cd83a7042c1549a8  backend/requirements-runtime.lock
+MATCH  733f6a3255c021f44dae2659dcdcbfdbb6b840aee519cbf15b74774ec4551ae9  backend/app/main.py
+MATCH  efe2e39b59964670e9f9adba0b0f2feff4d5a17510d1edc7c8f39a716e049bf1  frontend/package.json
+MATCH  ec2098953aebcdfb556991869d0221429fa80cc9e0aba88df15a609057666d66  frontend/package-lock.json
+MATCH  d96c21d075b7fca2f6308ea3d24984e2d6d56a4bfeec065d38696191d9f5bcf4  frontend/src/features/welcome/WelcomePage.tsx
+MATCH  519ca76783df9323f2081b464482e11c784ca0bd4d8745a06db960a953e619a8  download/Phase2_Step1_Report.md
+MATCH  30d18a2dcc250d08501395a581fed7b08244ad202eb3007eb6359e3b7761a687  download/evidence/pip_audit.txt
+MATCH  275c8b7540ba405ed8d572cd1f5aacaab9a691579ec3991cb0c4d66b8982fb53  download/evidence/backend_integration_tests.txt
