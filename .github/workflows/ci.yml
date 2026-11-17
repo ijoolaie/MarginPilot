@@ -148,8 +148,18 @@ jobs:
           pip install --quiet pip-audit==2.10.1
           pip-audit --require-hashes -r backend/requirements.lock
 
-      - name: 16. gitleaks
-        uses: gitleaks/gitleaks-action@v3
+      - name: 16. Install pinned Gitleaks CLI (SHA-256 verified)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_OPTIONS: --trace-deprecation
+          GITLEAKS_VERSION: "8.30.1"
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          curl --fail --location --silent --show-error --retry 3 \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            --output "${RUNNER_TEMP}/gitleaks.tar.gz"
+          echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf "${RUNNER_TEMP}/gitleaks.tar.gz" -C "${RUNNER_TEMP}" gitleaks
+          sudo install -m 0755 "${RUNNER_TEMP}/gitleaks" /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: 17. Gitleaks full-history scan
+        run: gitleaks git --redact --log-opts="--all" .
