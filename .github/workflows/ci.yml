@@ -33,10 +33,10 @@ jobs:
       DATABASE_URL: postgresql+psycopg://marginpilot:ci-test-password@localhost:5432/marginpilot
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
       - name: 2. Setup Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7.1.0
         with:
           python-version: "3.12"
 
@@ -79,10 +79,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
       - name: 3. Setup Node 24
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7.1.0
         with:
           node-version: "24"
           cache: npm
@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
       - name: 13. Build backend image (no push)
         uses: docker/build-push-action@v7
@@ -134,12 +134,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # gitleaks scans full history
 
       - name: Setup Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7.1.0
         with:
           python-version: "3.12"
 
@@ -152,3 +152,4 @@ jobs:
         uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_OPTIONS: --trace-deprecation
