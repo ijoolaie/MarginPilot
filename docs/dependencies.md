@@ -32,7 +32,7 @@
 | SQLAlchemy | 2.1.8 | — |
 | alembic | 1.20.1 | — (در deps هست؛ migration از Phase 3) |
 | psycopg / psycopg-binary | 3.3.9 | — |
-| httpx | 0.28.1 | — |
+| httpx2 | 2.16.2 | مهاجرت TestClient مطابق API رسمی Starlette؛ جایگزین httpx قدیمی |
 | pytest | **9.0.3** | ⚠️ امنیتی: 9.0.2 → **PYSEC-2026-1845**؛ bump به نسخهٔ fix |
 | pytest-asyncio / pytest-cov | 1.3.0 / 7.0.0 | — |
 | ruff / mypy | 0.17.5 / 2.4.1 | — |
