@@ -33,10 +33,10 @@ jobs:
       DATABASE_URL: postgresql+psycopg://marginpilot:ci-test-password@localhost:5432/marginpilot
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 2. Setup Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -78,10 +78,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 3. Setup Node 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "24"
           cache: npm
@@ -114,16 +114,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 13. Build backend image (no push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           push: false
 
       - name: 13. Build frontend image (no push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           push: false
@@ -133,12 +133,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # gitleaks scans full history
 
       - name: Setup Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -148,6 +148,6 @@ jobs:
           pip-audit --require-hashes -r backend/requirements.lock
 
       - name: 16. gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
