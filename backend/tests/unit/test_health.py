@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
-from httpx import ASGITransport, AsyncClient
+from httpx2 import ASGITransport, AsyncClient
 
 import app.api.v1.health as health_module
 from app.core.db import check_database_connection  # noqa: F401  (monkeypatch target ref)
