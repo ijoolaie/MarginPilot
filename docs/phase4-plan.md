@@ -48,7 +48,7 @@
 
 ## گام‌های بعدی
 
-Step 1 تأیید شده است؛ Step 2 در ادامهٔ همین سند تعریف و پیاده‌سازی شده است. واردکردن Excel و مقایسهٔ قیمت‌ها مراحل جداگانه‌اند.
+Step 1 تا Step 4 تکمیل و تأیید شده‌اند. واردکردن Excel و مقایسهٔ قیمت‌ها در گام‌های مستقل پیاده‌سازی شده‌اند.
 
 ## Step 2 — Catalog & Supplier Services and APIs
 
@@ -86,11 +86,12 @@ Step 1 تأیید شده است؛ Step 2 در ادامهٔ همین سند تع�
 - migration upgrade/downgrade/upgrade و `alembic check` بدون drift.
 - اجرای کامل unit و integration tests، Ruff، mypy و `pip check`.
 - عدم تغییر Docker سراسری، منابع پروژه‌های دیگر، main یا remote بدون مجوز.
+
 ## Step 3 — CSV/XLSX Import Pipeline
 
 **Predecessor:** Phase 4 Step 2 is approved by the user.
 
-**Status:** Implemented locally, validated, and approved by the user.
+**Status:** Implemented, validated, published on `phase4-step3-release`, and approved by the user.
 
 ### Delivered
 
@@ -107,20 +108,20 @@ Step 1 تأیید شده است؛ Step 2 در ادامهٔ همین سند تع�
 - Unit tests for CSV encodings/delimiters, XLSX parsing, archive hardening, mappings, Persian digits/units, Decimal validation, duplicates and spreadsheet formula injection.
 - Integration tests for product and supplier imports, preview, row errors, error report, tenant isolation, RBAC, idempotent replay, rollback/retry, XLSX upload and draft finalization.
 - Ruff, strict mypy, `pip check`, and the full backend test suite.
+- GitHub Actions run `44691020924`: 4/4 jobs passed, including backend/frontend checks, Docker builds and security scanning.
 
 ### Security and operational boundaries
 
 - Original upload bytes are not persisted; only parsed rows and file metadata/digest are stored.
 - Runtime dependencies `openpyxl`, `defusedxml` and `python-multipart` are pinned and hash-locked.
 - Upload defaults: 25 MB, 100,000 rows, 200 columns, 1,000,000 total cells; ZIP limits are enforced by the parser.
-- No Docker global configuration, other project resources, main branch or remote Git state is changed by this step.
+- No Docker global configuration, other project resources or main branch were changed.
 
-
-## Step 4 ? Supplier Price Comparison Engine
+## Step 4 — Supplier Price Comparison Engine
 
 **Predecessor:** Phase 4 Step 3 is published on `phase4-step3-release` and approved.
 
-**Status:** Implemented and locally validated; publication and GitHub CI are pending.
+**Status:** Implemented, independently reviewed, published on `phase4-step4-release`, and CI-verified. Documentation verification corrections are committed.
 
 ### Delivered
 
@@ -138,10 +139,12 @@ Step 1 تأیید شده است؛ Step 2 در ادامهٔ همین سند تع�
 - Full backend suite: **114 passed** (70 unit + 44 PostgreSQL integration), including maximum supported price-percentage persistence and tenant-isolation cases.
 - Ruff, strict mypy, `pip check`, and hash-locked `pip-audit==2.10.1` (no known vulnerabilities).
 - `git diff --check` clean.
+- GitHub Actions run [44696157933](https://github.com/ijoolaie/MarginPilot/actions/runs/44696157933) passed 4/4 jobs, including backend tests, frontend checks, Docker backend/frontend image builds, dependency security audit and Gitleaks.
+- Local Docker build was intentionally not run because the exact pinned Python base-image digest was not cached; no substitute digest or pull was used.
 
 ### Security and operational boundaries
 
 - Comparison endpoints require `comparison:read` or `comparison:write`; all referenced lists, prices and products are validated within the active tenant.
 - Manual confirmation locks price rows and writes both product links and audit data in one transaction.
-- No local Docker build was run because the exact pinned Python base-image digest is not cached; no alternate digest or pull was used. GitHub CI, including Docker builds and secret scanning, is required before this branch is considered release-verified.
+- The synchronous comparison path supports up to 100,000 rows per list. This is acceptable for the MVP's expected low concurrency, but large runs can hold tenant-level locks and consume substantial memory/transaction time. Monitor production behavior; consider a lower operational limit or background jobs before scaling concurrent usage.
 - `main` is unchanged. This step is isolated on `phase4-step4-release`; no merge is part of this approval.
