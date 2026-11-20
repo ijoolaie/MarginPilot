@@ -62,3 +62,21 @@
 
 ### Non-negotiable
 - Tenant isolation، RBAC، صحت مالی Decimal/NUMERIC، تست PostgreSQL واقعی، audit و session security، CI/security scans و backup/restore آزموده‌شده حفظ می‌شوند.
+
+
+## [phase5-foundation] — 2026-11-20 — Sales & Expenses foundation
+
+### Added
+- مدل‌های tenant-scoped سفارش فروش، اقلام فروش، مرجوعی، اقلام مرجوعی و هزینه‌ها به همراه migration زنجیره‌ای `e5f6a7b8c9d0`.
+- ثبت مدل‌های جدید در Alembic metadata.
+- تخصیص قطعی تخفیف سفارش با Decimal و largest-remainder؛ مبنا ارزش قلم پس از تخفیف خطی، tie-break بر اساس ترتیب قلم (ADR-027).
+- تست‌های واحد برای تخصیص، مرزهای اعتبارسنجی، دقت مقادیر بزرگ و compile شدن DDL مدل‌ها.
+
+### Validation
+- 84 unit tests passed؛ Ruff، mypy و pip check موفق.
+- تولید SQL مهاجرت در حالت Alembic offline موفق؛ زنجیرهٔ migration تا head شناسایی شد.
+- PostgreSQL integration، اجرای واقعی upgrade/downgrade و آزمون قیود DB هنوز اجرا نشده‌اند؛ به CI/PostgreSQL واقعی موکول‌اند. هیچ ادعای اجرای DB واقعی ثبت نمی‌شود.
+
+### Notes
+- سفارش فروش سند مالی است و soft-delete ندارد؛ شمارهٔ سفارش در tenant یکتا می‌ماند (ADR-026).
+- این مرحله فقط foundation است؛ CRUD/API فروش و هزینه، مرجوعی تراکنشی و فعال‌سازی Sales import هنوز تکمیل نشده‌اند.
