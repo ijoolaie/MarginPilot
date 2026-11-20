@@ -46,10 +46,18 @@ Currency conversion and unit conversion are intentionally unsupported. The run r
 ## Deliberate exclusions
 
 No fuzzy/AI matching, currency conversion, unit conversion, sales-order comparisons, background worker or frontend UI is included in this step.
-## Local verification result
+
+## Verification results
+
+### Local verification
 
 - PostgreSQL migration chain: full downgrade to `base`, upgrade to revision `d4f5a6b7c8d9`, and `alembic check` all passed.
-- Comparison integration tests: 5 passed, including idempotency, tenant isolation, RBAC, atomic rollback on unit mismatch, manual peer pairing, rejection/splitting, and schema/FK/index inspection.
-- Full backend suite: 113 passed.
+- Comparison integration tests: 6 passed, covering idempotency, tenant isolation, RBAC, atomic rollback on unit mismatch, manual peer pairing, rejection/splitting, and schema/FK/index inspection.
+- Full backend suite: 114 passed (70 unit + 44 PostgreSQL integration tests).
 - Ruff and strict mypy (42 source files) passed; `pip check` reported no broken requirements; hash-locked `pip-audit` reported no known vulnerabilities.
-- Docker image build and GitHub CI were not run because the exact pinned Python base-image digest was not cached. No substitute digest or pull was used.
+- Local Docker image build was not run because the exact pinned Python base-image digest was not cached. No substitute digest or pull was used.
+
+### GitHub Actions verification
+
+- Workflow run [44696157933](https://github.com/ijoolaie/MarginPilot/actions/runs/44696157933) completed successfully: 4/4 jobs passed.
+- CI covered backend tests, frontend checks, Docker backend/frontend image builds, dependency security audit, and Gitleaks secret scanning.
