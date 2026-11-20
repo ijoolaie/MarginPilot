@@ -114,7 +114,7 @@ sequenceDiagram
 
 ## ۷) Security Headers (در Caddy + FastAPI)
 
-`Strict-Transport-Security` (Caddy) · `X-Content-Type-Options: nosniff` · `X-Frame-Options: DENY` · `Referrer-Policy: strict-origin-when-cross-origin` · `Permissions-Policy` حداقلی · `CSP: default-src 'self'` (دقیق‌سازی و تست در Phase 12).
+`Strict-Transport-Security` (Caddy) · `X-Content-Type-Options: nosniff` · `X-Frame-Options: DENY` · `Referrer-Policy: strict-origin-when-cross-origin` · `Permissions-Policy` حداقلی · `CSP: default-src 'self'` (دقیق‌سازی و تست در Phase 8).
 
 ## ۸) Secrets و Audit
 
@@ -155,7 +155,7 @@ sequenceDiagram
 
 ## ۱۲) باقی‌مانده‌های امنیتی برای فازهای بعد
 
-CSP دقیق و تست‌شده (Phase 12) · dependency scanning فعال (Phase 2) · IDOR خودکار روی همهٔ endpointها (Phase 12) · Backup security و restore drill (Phase 14) · تأیید ایمیل (بعد از سرویس ایمیل) · rate limit per-tenant در tenant_settings (بعد از v1).
+CSP دقیق و تست‌شده (Phase 8) · dependency scanning فعال (Phase 2) · IDOR خودکار روی همهٔ endpointها (Phase 8) · Backup security و restore drill (Phase 8) · تأیید ایمیل (بعد از سرویس ایمیل) · rate limit per-tenant در tenant_settings (بعد از v1).
 
 ### Implemented import hardening — Phase 4 Step 3
 
