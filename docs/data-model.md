@@ -194,7 +194,7 @@ erDiagram
 
 ### متعلق به tenant — محاسبه، گزارش، مقایسه
 
-**calculations** — *هدف:* ژورنال نتایج موتور مالی با provenance کامل. id PK · tenant_id · calc_type (`sale_item`|`order`|`period`|`price_suggestion`) · formula_version (`FV-2`) · input (jsonb — شناسهٔ منابع، snapshotها، استخرهای هزینه و سهم‌ها، strategy) · output (jsonb) · warnings (jsonb) · input_hash · source (`system`|`report`|`manual`) · created_at · created_by FK→users nullable · index(tenant_id, calc_type, created_at)
+**calculations** — *هدف:* ژورنال نتایج موتور مالی با provenance کامل. id PK · tenant_id · calc_type (`sale_item`|`order`|`product`|`period`|`price_suggestion`) — `product` برای خروجی‌های تجمیعی در سطح محصول، مستقل از محاسبهٔ سفارش · formula_version (`FV-2`) · input (jsonb — شناسهٔ منابع، snapshotها، استخرهای هزینه و سهم‌ها، strategy) · output (jsonb) · warnings (jsonb) · input_hash · source (`system`|`report`|`manual`) · created_at · created_by FK→users nullable · index(tenant_id, calc_type, created_at)
 
 **reports** — *هدف:* گزارش‌های تولیدی با متادیتا. id PK · tenant_id · requested_by FK→users · report_type · format (`pdf`|`xlsx`|`csv`) · params (jsonb) · status (`queued`|`running`|`completed`|`failed`) · file_name nullable · file_size nullable · error (jsonb nullable) · generated_at nullable · expires_at nullable · created_at
 
