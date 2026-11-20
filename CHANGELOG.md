@@ -47,3 +47,18 @@
 
 ## [phase0] — 2026-11-16
 - ممیزی محیط، نقشهٔ فازها، قواعد همکاری (گزارش‌های PDF/DOCX در download/).
+
+
+## [mvp-roadmap-alignment] — 2026-11-20 — Mini-SaaS MVP scope alignment
+
+### Changed
+- ثبت تصمیم اجرایی مصوب برای تمرکز بر تحویل سریع MVP و جلوگیری از overengineering در `docs/mvp-roadmap.md`.
+- فازهای باقی‌مانده در چهار بستهٔ محصولی جمع‌بندی شدند: Phase 5 Sales & Expenses، Phase 6 Financial Calculation Engine، Phase 7 MVP UI/Dashboard/Reports و Phase 8 Release Readiness.
+- وضعیت README از شرح قدیمی Phase 2 به وضعیت واقعی تحویل‌های Phase 3 و Phase 4 به‌روزرسانی شد.
+- مرز میان قابلیت طراحی‌شده و قابلیت واقعاً پیاده‌سازی‌شده صریح شد؛ Sales/Expenses، محاسبات سود، UI محصول و گزارش‌های نهایی همچنان کارهای باقی‌مانده‌اند.
+
+### Deferred from MVP
+- Microservices، صف و پردازش توزیع‌شدهٔ پیچیده، حسابداری کامل، انبارداری جامع، گزارش‌ساز سفارشی، AI مالی، اپ موبایل و مقیاس‌پذیری سازمانی تا اثبات نیاز واقعی به تعویق افتادند.
+
+### Non-negotiable
+- Tenant isolation، RBAC، صحت مالی Decimal/NUMERIC، تست PostgreSQL واقعی، audit و session security، CI/security scans و backup/restore آزموده‌شده حفظ می‌شوند.
