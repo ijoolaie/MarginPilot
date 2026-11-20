@@ -7,3 +7,7 @@ os.environ.setdefault(
     "DATABASE_URL",
     "postgresql+psycopg://marginpilot:placeholder@localhost:5432/marginpilot",
 )
+
+# Exercise Secure session cookies on every platform; HTTPX does not treat
+# http://localhost as a secure-cookie origin consistently across OSes.
+os.environ["CORS_ORIGINS"] = "https://localhost:3000"

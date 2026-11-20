@@ -19,7 +19,7 @@ from app.modules.tenancy.models import Membership, Role, Tenant
 from app.modules.tenancy.service import create_tenant
 
 pytestmark = pytest.mark.integration
-ORIGIN = "http://localhost:3000"
+ORIGIN = "https://localhost:3000"
 PASSWORD = "correct horse battery staple 2026"
 
 

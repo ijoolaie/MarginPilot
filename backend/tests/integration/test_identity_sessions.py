@@ -19,7 +19,7 @@ from app.modules.identity.service import consume_password_reset_token, create_pa
 
 pytestmark = pytest.mark.integration
 PASSWORD = "correct horse battery staple 2026"
-ORIGIN = "http://localhost:3000"
+ORIGIN = "https://localhost:3000"
 
 
 def _create_user() -> User:
