@@ -288,15 +288,33 @@ def upgrade() -> None:
         sa.Column("status", sa.String(16), server_default=sa.text("'committed'"), nullable=False),
         sa.Column("notes", sa.Text()),
         sa.Column("created_by", sa.BigInteger(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE", name="fk_sales_refunds_tenant"),
-        sa.ForeignKeyConstraint(["tenant_id", "order_id"], ["sales_orders.tenant_id", "sales_orders.id"], ondelete="RESTRICT", name="fk_sales_refunds_order_tenant"),
-        sa.ForeignKeyConstraint(["created_by"], ["users.id"], ondelete="RESTRICT", name="fk_sales_refunds_creator"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["tenant_id"], ["tenants.id"], ondelete="CASCADE", name="fk_sales_refunds_tenant"
+        ),
+        sa.ForeignKeyConstraint(
+            ["tenant_id", "order_id"],
+            ["sales_orders.tenant_id", "sales_orders.id"],
+            ondelete="RESTRICT",
+            name="fk_sales_refunds_order_tenant",
+        ),
+        sa.ForeignKeyConstraint(
+            ["created_by"], ["users.id"], ondelete="RESTRICT", name="fk_sales_refunds_creator"
+        ),
         sa.UniqueConstraint("tenant_id", "id", name="uq_sales_refunds_tenant_id"),
-        sa.UniqueConstraint("tenant_id", "refund_number", name="uq_sales_refunds_tenant_refund_number"),
-        sa.CheckConstraint("length(btrim(refund_number)) > 0", name=op.f("ck_sales_refunds_refund_number_not_blank")),
+        sa.UniqueConstraint(
+            "tenant_id", "refund_number", name="uq_sales_refunds_tenant_refund_number"
+        ),
+        sa.CheckConstraint(
+            "length(btrim(refund_number)) > 0",
+            name=op.f("ck_sales_refunds_refund_number_not_blank"),
+        ),
         sa.CheckConstraint("amount > 0", name=op.f("ck_sales_refunds_amount_positive")),
-        sa.CheckConstraint("currency IN ('IRT', 'IRR')", name=op.f("ck_sales_refunds_currency_allowed")),
+        sa.CheckConstraint(
+            "currency IN ('IRT', 'IRR')", name=op.f("ck_sales_refunds_currency_allowed")
+        ),
         sa.CheckConstraint("status = 'committed'", name=op.f("ck_sales_refunds_status_committed")),
     )
     op.create_index("ix_sales_refunds_tenant_order", "sales_refunds", ["tenant_id", "order_id"])
