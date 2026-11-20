@@ -1,13 +1,13 @@
 # مدل داده MarginPilot — ERD و مشخصات جداول (نسخهٔ اصلاح‌شدهٔ بازبینی Phase 1)
 
 **وضعیت:** طراحی اصلاح‌شده بر اساس بازبینی فنی (دور دوم — اصلاحات نهایی). تغییرات کلیدی نسبت به نسخهٔ قبل: جداسازی tenant در سطح **DB با FKهای مرکب**، جداول جدید `product_price_history` و `idempotency_keys`، **موجودیت‌های مستقل مرجوعی (`sales_returns`/`sales_return_items`)**، **FK سه‌ستونهٔ variant↔product**، حذف `supplier_id` از supplier_prices، رفع یکتایی دسته‌های ریشه و قواعد SKU، قواعد صریح یکتایی supplier_prices، شفاف‌سازی ارز و نقش‌های سراسری. DDL واقعی با Alembic به‌صورت مرحله‌ای در Phase 3 و Phase 4 پیاده‌سازی می‌شود؛ این سند قرارداد مدل است.
-**شمارش:** ۲۹ جدول (۱۱ سراسری + ۱۸ متعلق به tenant) · ۴۸ رابطه در ERD · ۲۴ FK مرکب tenant-aware.
+**Table count:** 30 tables (11 global + 19 tenant-scoped) - 50 ERD relationships - 25 tenant-aware composite FKs.
 
 ## ۱) اصول کلی
 
 - **دو کلاس جدول:** «سراسری» (متعلق به پلتفرم: کاربران، نقش‌ها، tenantها و…) و «متعلق به tenant» (هر رکوردش متعلق به یک tenant است). جدول‌بندی کامل در §۲.
 - **پول:** `NUMERIC(20,2)` مبالغ؛ `NUMERIC(12,6)` نرخ/درصد؛ واحد پول در سطح tenant (§۷ ارز).
-- **حذف:** Soft delete فقط برای products، product_variants، suppliers، categories (`deleted_at`). **سوابق مالی** (sales_orders، sale_items، sales_returns، expenses) هرگز hard delete نمی‌شوند؛ ابطال فقط با وضعیت + Audit.
+- **حذف:** Soft delete فقط برای products، product_variants، suppliers، categories (`deleted_at`). **سوابق مالی** (sales_orders، sale_items، sales_returns, sales_refunds، expenses) هرگز hard delete نمی‌شوند؛ ابطال فقط با وضعیت + Audit.
 - **Timestamps:** همهٔ جداول `created_at` (+ `updated_at` برای رکوردهای به‌روزرسانی‌پذیر) — timestamptz، UTC.
 - **کلیدها:** PK عددی `bigint identity` برای موجودیت‌های دامنه؛ `sessions` UUID. توکن نشست/CSRF/reset فقط به‌صورت **هش** ذخیره می‌شوند.
 - **بدون Trigger در v1:** یکپارچگی بین‌جدولی (جز FK) با validation سرویس + تست integration تضمین می‌شود؛ تصمیم مستند برای سادگی و دیباگ‌پذیری.
@@ -17,7 +17,7 @@
 | کلاس | جداول | کلید مرجع tenant |
 |---|---|---|
 | **سراسری (۱۱)** | users، roles، permissions، role_permissions، tenants، tenant_settings، memberships، sessions، password_reset_tokens، audit_logs، idempotency_keys | `tenant_id` تک‌ستونه (وقتی معنا دارد) |
-| **متعلق به tenant (۱۸)** | categories، products، product_price_history، product_variants، suppliers، supplier_price_lists، supplier_prices، sales_orders، sale_items، **sales_returns، sales_return_items**، expenses، imports، import_rows، calculations، reports، comparison_runs، comparison_matches | `tenant_id NOT NULL` + FK مرکب به والد (§۴) |
+| **متعلق به tenant (۱۹)** | categories، products، product_price_history، product_variants، suppliers، supplier_price_lists، supplier_prices، sales_orders، sale_items، **sales_returns، sales_return_items, sales_refunds**، expenses، imports، import_rows، calculations، reports، comparison_runs، comparison_matches | `tenant_id NOT NULL` + FK مرکب به والد (§۴) |
 
 `memberships` جدول اتصال سراسری user↔tenant است؛ `sessions` سراسری است و `tenant_id` آن با اعتبارسنجی membership در سرویس معتبر می‌شود (FK از جنس متقاطع نمی‌تواند این را تضمین کند — مستند).
 
@@ -55,8 +55,10 @@ erDiagram
     sales_orders ||--o{ sale_items : contains
     products ||--o{ sale_items : "sold as"
     product_variants ||--o{ sale_items : "sold as variant"
-    sales_orders ||--o{ sales_returns : "has returns"
+    sales_orders ||--o{ sales_returns : "has physical returns"
+    sales_orders ||--o{ sales_refunds : "has independent refunds"
     users ||--o{ sales_returns : registered_by
+    users ||--o{ sales_refunds : registered_by
     sales_returns ||--o{ sales_return_items : contains
     sale_items ||--o{ sales_return_items : "returned via"
     tenants ||--o{ expenses : owns
@@ -107,6 +109,7 @@ erDiagram
 | 22 | sales_returns | (tenant_id, order_id) | sales_orders (tenant_id, id) |
 | 23 | sales_return_items | (tenant_id, return_id) | sales_returns (tenant_id, id) |
 | 24 | sales_return_items | (tenant_id, sale_item_id) | sale_items (tenant_id, id) |
+| 25 | sales_refunds | (tenant_id, order_id) | sales_orders (tenant_id, id) |
 
 > جمع نهایی: **۲۴ FK مرکب tenant-aware**.
 > **رفتار FK مرکب با ستون اختیاری:** به‌صورت پیش‌فرض PostgreSQL (MATCH SIMPLE) اگر هر ستونی از ترکیب NULL باشد قید FK اعمال نمی‌شود — دقیقاً رفتار مطلوب برای ارجاع‌های اختیاری؛ اگر همهٔ ستون‌ها مقدار داشته باشند، هم‌tenant بودن و درست بودن والد **در DB** تضمین می‌شود.
@@ -228,7 +231,7 @@ erDiagram
 
 ## ۸) Indexهای کلیدی
 
-`UNIQUE (tenant_id, id)` روی همهٔ جداول والدِ متعلق به tenant (پیش‌نیاز FK مرکب §۴) · `sessions(token_hash)` unique · `sessions(idle_expires_at)` (پاک‌سازی) · `products(tenant_id, sku)` partial unique · `product_variants(tenant_id, sku)` partial unique · **`product_variants(tenant_id, product_id, id)` unique (کلید FK سه‌ستونه)** · `product_price_history(tenant_id, product_id, change_type, created_at)` · `sales_orders(tenant_id, order_number)` unique · `sales_orders(tenant_id, order_date)` · `sale_items(tenant_id, order_id)` · **`sales_returns(tenant_id, return_number)` unique (بدون partial — جدول بدون soft-delete) · `sales_returns(tenant_id, order_id)` · `sales_return_items(tenant_id, return_id)`** · `expenses(tenant_id, expense_date)` · `supplier_prices(price_list_id, sku)` و `(price_list_id, raw_name)` partial unique · `calculations(tenant_id, calc_type, created_at)` · `audit_logs(tenant_id, created_at)` · `import_rows(import_id, status)` · `memberships(user_id, tenant_id)` unique · `idempotency_keys(tenant_id, user_id, idempotency_key)` unique · `idempotency_keys(expires_at)`
+`UNIQUE (tenant_id, id)` روی همهٔ جداول والدِ متعلق به tenant (پیش‌نیاز FK مرکب §۴) · `sessions(token_hash)` unique · `sessions(idle_expires_at)` (پاک‌سازی) · `products(tenant_id, sku)` partial unique · `product_variants(tenant_id, sku)` partial unique · **`product_variants(tenant_id, product_id, id)` unique (کلید FK سه‌ستونه)** · `product_price_history(tenant_id, product_id, change_type, created_at)` · `sales_orders(tenant_id, order_number)` unique · `sales_orders(tenant_id, order_date)` · `sale_items(tenant_id, order_id)` · **`sales_returns(tenant_id, return_number)` unique (بدون partial — جدول بدون soft-delete) · `sales_returns(tenant_id, order_id)` · `sales_return_items(tenant_id, return_id)` - `sales_refunds(tenant_id, refund_number)` unique - `sales_refunds(tenant_id, order_id)`** · `expenses(tenant_id, expense_date)` · `supplier_prices(price_list_id, sku)` و `(price_list_id, raw_name)` partial unique · `calculations(tenant_id, calc_type, created_at)` · `audit_logs(tenant_id, created_at)` · `import_rows(import_id, status)` · `memberships(user_id, tenant_id)` unique · `idempotency_keys(tenant_id, user_id, idempotency_key)` unique · `idempotency_keys(expires_at)`
 
 ## ۹) جداول آینده (فقط طرح — ساخته نمی‌شوند)
 
@@ -249,3 +252,7 @@ erDiagram
 ### Phase 4 Step 4 comparison schema details
 
 `comparison_runs` and `comparison_matches` are tenant-owned. Both price-list references and every optional price/product reference use tenant-aware composite foreign keys. `comparison_matches.base_price_id` is nullable so target-only additions can be represented; `target_price_id` is nullable for base-only removals. A CHECK requires at least one side. Partial unique indexes prevent a supplier-price row from appearing more than once per side in one run. Additional indexes cover every non-primary-key foreign-key lookup (`created_by`, both price-list references, both price-row references, and both product references). `price_delta_pct` uses `NUMERIC(26,4)`, sized for the full percentage range implied by `supplier_prices.unit_price NUMERIC(20,2)`. Delta fields are nullable for unmatched or non-comparable units.
+
+
+### sales_refunds (Phase 5 / ADR-028)
+Immutable independent cash-refund ledger for paid orders cancelled before shipment. Columns: `tenant_id`, `refund_number`, `order_id`, `refund_date`, `amount NUMERIC(20,2)`, `currency`, `status` (v1: `committed`), `notes`, `created_by`, and `created_at`. Uses a tenant-aware composite FK to `sales_orders`, a creator FK to `users`, unique `(tenant_id, refund_number)`, and indexes on `(tenant_id, order_id)` and `created_by`. It is separate from `sales_return_items` and does not change returned quantities or inventory. The combined sum of `sales_refunds.amount` and `sales_return_items.refund_amount` must not exceed the net amount received for the order. In v1, `paid` means full net payment received; partial payments are out of scope.

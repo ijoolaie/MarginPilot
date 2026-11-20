@@ -107,3 +107,10 @@
 ## ۷. نکتهٔ باز برای شروع کدنویسی
 
 قرارداد Sales import در سند API فعلی `sales` را رزرو کرده و صریحاً `422 IMPORT_KIND_NOT_READY` می‌دهد؛ mapping دقیق ورودی فروش هنوز در بخش mapping فعلی تعریف نشده است. این قرارداد باید قبل از فعال‌سازی import تکمیل شود. سایر ساختارهای فروش/مرجوعی/هزینه در مدل داده و API موجودند و مبنای پیاده‌سازی‌اند.
+
+
+### ADR-028 implementation amendment
+- `sales_refunds` is an immutable ledger for independent refunds on paid, cancelled-before-shipment orders. `POST/GET /sales/orders/{id}/refunds` require RBAC; POST requires `Idempotency-Key` and writes Audit.
+- Cancellation is allowed only before shipment. Physical returns require shipped/delivered status and are never used for cancelled orders.
+- The combined amount of independent refunds and return refunds cannot exceed the order's net amount received. In v1, `paid` means the full net order amount was received; partial payments are out of scope.
+- Order lines, prices and discounts become immutable after payment.

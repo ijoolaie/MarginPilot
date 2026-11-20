@@ -134,3 +134,9 @@ Target Margin Pricing   = Total Cost ÷ (1 − Target Margin)      (۰ ≤ margi
 - هر اجرای محاسبه در `calculations` ذخیره می‌شود با: `calc_type`، `formula_version`، `input` کامل (شناسهٔ منابع، snapshotهای cost، استخرهای هزینه و سهم‌ها، strategy)، `output`، `warnings`.
 - منابع تاریخی بازتولید: `sale_items.unit_cost/cost_source` (snapshot لحظهٔ ثبت)، رکوردهای `sales_return_items` (تاریخچهٔ کامل مرجوعی‌ها)، `product_price_history` (تاریخچهٔ قیمت مرجع)، `supplier_prices` (تاریخچهٔ قیمت هر تأمین‌کننده در لیست‌های final) — همهٔ ورودی‌های محاسبه یا در خود رکوردها snapshot شده‌اند یا در `calculations.input` ثبت می‌شوند؛ **هیچ محاسبهٔ تاریخی به دادهٔ «فعلی» وابسته نیست**.
 - نتایج API (`GET /sales/orders/{id}/profit`) on-demand با موتور خالص محاسبه و در ژورنال ثبت می‌شود؛ پاسخ شامل `formula_version` و `calculation_id` است.
+
+
+### 6.4 Independent refunds for cancelled orders (ADR-028)
+- Independent refunds are sourced from `sales_refunds`; they are not physical returns and must never contribute to `return_variance`.
+- An order cancelled before shipment creates no recognized sales revenue or operational COGS. Its receipt/refund is excluded from sales-profit calculation in v1. Actual costs associated with cancelled orders remain reportable under the cancelled-order cost rules in section 5.2.
+- Combined independent refunds and return refunds are capped at the net amount received. In v1, `paid` means the full net order amount was received; partial payments are out of scope.

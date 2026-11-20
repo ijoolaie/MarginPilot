@@ -80,3 +80,29 @@
 ### Notes
 - سفارش فروش سند مالی است و soft-delete ندارد؛ شمارهٔ سفارش در tenant یکتا می‌ماند (ADR-026).
 - این مرحله فقط foundation است؛ CRUD/API فروش و هزینه، مرجوعی تراکنشی و فعال‌سازی Sales import هنوز تکمیل نشده‌اند.
+
+## [phase5-api-progress] - 2026-11-20 - Local implementation and PostgreSQL verification
+
+### Added
+- Tenant-scoped sales order create/list/detail/update endpoints with RBAC, filters, product/variant ownership checks, immutable SKU/name and purchase-cost snapshots, audit events, and deterministic order-discount allocation.
+- Documented order status transitions, payment/shipping state validation, and sales line add/update/delete operations before completion; line edits are blocked once returns exist and order discounts are reallocated atomically.
+- Immutable full/partial return records with actual refund amounts, return-history endpoint, source-record aggregation, cache updates in the same transaction, payment/shipping status derivation, audit events, and mandatory idempotency key using the documented PostgreSQL upsert pattern.
+- Tenant-scoped expense create/list/detail/update/soft-delete endpoints with RBAC, order/product/period allocation-scope validation, tenant/currency checks, and audit events.
+- PostgreSQL integration coverage for sales lifecycle, line edits, return history, idempotency replay/conflict, expense CRUD and scope validation, tenant isolation, and RBAC.
+
+### Validation
+- 97 backend unit tests passed.
+- 47 PostgreSQL integration tests passed against an isolated PostgreSQL 16.16 instance.
+- Full Alembic migration chain passed `upgrade head -> downgrade base -> upgrade head`; final revision is `e5f6a7b8c9d0`.
+- `alembic check` reported no metadata/schema drift.
+- Ruff, strict mypy, pip check, and `git diff --check` passed.
+
+### Not done
+- Sales import remains disabled pending agreed source-file mapping; no code commit, push, PR, or merge was performed. All code changes remain local on `phase5-sales-expenses`.
+
+
+### Phase 5 - ADR-028 implementation verification
+- Added the immutable independent-refund ledger and create/history API for paid orders cancelled before shipment.
+- Blocked cancellation after shipment, physical returns before shipment, and financial line edits after payment.
+- Enforced the combined refund ceiling across independent refunds and physical returns; independent refunds are idempotent and audited.
+- Local verification: 99 unit tests and 49 PostgreSQL integration tests; full Alembic upgrade/downgrade/upgrade and `alembic check` with no drift; Ruff, strict mypy and pip check passed. CI has not yet been run.

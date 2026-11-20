@@ -32,7 +32,7 @@
 | رفتار Serialization Failure | اگر deployment سطح Isolation بالاتری تحمیل کند و گام ۱ یا ۳ با `SQLSTATE 40001 (serialization_failure)` شکست بخورد: middleware **کل تراکنش را از گام ۱ از نو** اجرا می‌کند (حداکثر ۳ بار با backoff تصادفی)؛ عدم موفقیت مجدد → `503` با خطای retriable — هرگز با تراکنش aborted ادامه نمی‌دهد. **این رفتار فقط طراحی است و روی PostgreSQL واقعی آزمایش نشده** |
 | پاک‌سازی | حذف دوره‌ای رکوردهای منقضی با index(expires_at) — صرفاً بهداشت داده؛ صحت قرارداد به آن وابسته نیست (بازنشانی در مسیر arbiter انجام می‌شود) |
 | مدل رزرو مستقل | در v1 عمداً انتخاب نشد (نیازمند وضعیت processing + بازیابی کلیدهای گیرکرده)؛ `IDEMPOTENCY_IN_PROGRESS` حذف شد — اگر آینده لازم شد، پروتکل رزرو مستقل مستند و پیاده می‌شود |
-| عملیات الزامی v1 | `POST /imports/{id}/confirm` · `POST /reports` · `POST /comparison/runs` · `POST /sales/orders/{id}/returns` — سایر POSTها اختیاری |
+| عملیات الزامی v1 | `POST /imports/{id}/confirm` · `POST /reports` · `POST /comparison/runs` · `POST /sales/orders/{id}/returns` + `POST /sales/orders/{id}/refunds` — سایر POSTها اختیاری |
 
 ## ۲) طرح پاسخ خطای یکسان
 
@@ -145,6 +145,8 @@
 | PATCH/DELETE | /sales/orders/{id}/items/{item_id} | sales:write | فقط پیش از completed |
 | POST | /sales/orders/{id}/returns | sales:write | مرجوعی کامل/جزئی: [{sale_item_id, quantity, refund_amount}] — **Idempotency-Key اجباری**؛ رکورد جدید در `sales_returns` + `sales_return_items` (تغییرناپذیر) + به‌روزرسانی کش تجمعی sale_items در همان تراکنش + Audit |
 | GET | /sales/orders/{id}/returns | sales:read | تاریخچهٔ مرجوعی‌های سفارش (سربرگ + اقلام) |
+| POST | /sales/orders/{id}/refunds | sales:write | Create an immutable independent refund for a paid order cancelled before shipment; positive `amount` + optional `notes`; `Idempotency-Key` required; audit event; combined refund ceiling enforced. |
+| GET | /sales/orders/{id}/refunds | sales:read | List independent refund records for the tenant-scoped order; does not include physical-return records. |
 | GET | /sales/orders/{id}/profit | pricing:read | on-demand با موتور خالص + ثبت در ژورنال؛ پاسخ: تفکیک، `formula_version`، `calculation_id`، warnings |
 
 ### 3.7 expenses
@@ -215,7 +217,7 @@
 
 ## ۵) گذارهای وضعیت — دقیق و کامل
 
-**sales_orders (`order_status`):** `pending`→`confirmed` · `pending`→`cancelled` · `confirmed`→`processing` · `confirmed`→`cancelled` · `processing`→`completed` · `processing`→`cancelled` · `completed`/`cancelled` پایانی. گذار نامعتبر → `409 CONFLICT` با جزئیات `{from, to}`. مرجوعی status را تغییر نمی‌دهد. **payment_status:** `unpaid`→`paid` · `paid`→`refunded`/`partially_refunded` (فقط با رکورد مرجوعی). **shipping_status:** `not_shipped`→`shipped`→`delivered` · `shipped`/`delivered`→`returned` (با رکورد مرجوعی).
+**sales_orders (`order_status`):** `pending` -> `confirmed`; `pending` -> `cancelled`; `confirmed` -> `processing`; `confirmed` -> `cancelled`; `processing` -> `completed`; `processing` -> `cancelled`; `completed` and `cancelled` are terminal. Cancellation is rejected after shipment. **`payment_status`:** `unpaid` -> `paid` is an explicit receipt confirmation; `paid` -> `partially_refunded`/`refunded` is derived from committed physical-return refunds and independent refunds. In v1, `paid` means the full net order amount was received; partial payments are out of scope. **`shipping_status`:** `not_shipped` -> `shipped` -> `delivered`; fully returned shipped/delivered orders become `returned`. Physical returns require shipped/delivered status; independent refunds require a cancelled paid order.
 
 **imports (`import_status`):** `uploaded`→`parsed`→`mapped`→`validated`→`awaiting_confirmation`→`committed` · هر مرحلهٔ pre-commit → `failed` (خطای ساختاری) یا `cancelled` (کاربر) · `committed`/`failed`/`cancelled` پایانی · commit فقط از `awaiting_confirmation`؛ گذار نامعتبر → `409 IMPORT_STATE_INVALID`.
 

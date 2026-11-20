@@ -152,3 +152,10 @@
 - **دلیل:** تخصیص قابل‌بازتولید، بدون شناوری یا خطای جمع، متناسب با ارزش واقعی هر قلم پس از تخفیف خطی؛ ترتیب سطر tie-breaker ساده و قطعی است.
 - **جایگزین‌ها:** تقسیم مساوی، تقسیم بر اساس مبلغ قبل از تخفیف خطی، و گرد کردن مستقل هر سهم (رد: ناعادلانه یا مستعد اختلاف جمع).
 - **هزینهٔ تغییر:** کم؛ الگوریتم خالص Decimal است و با تغییر داده‌های محصول/تأمین‌کننده وابستگی ندارد.
+
+## ADR-028 - Separate cancellation refunds from physical returns
+- **Decision:** Cancellation, cash refund and physical goods return are separate events. `sales_refunds` is an immutable ledger for independent refunds on paid orders cancelled before shipment. `sales_returns` and `sales_return_items` remain exclusively for physical goods returns.
+- **Eligibility:** Cancellation is allowed only before shipment. Independent refunds are allowed only for cancelled, paid orders. Physical returns are allowed only after shipment or delivery.
+- **Financial ceiling:** In v1, `paid` means the full net order amount was received; partial payments are out of scope. Combined independent refunds and physical-return refunds must not exceed the net amount received.
+- **Integrity:** Order financial lines become immutable after payment. Refund and return writes use tenant/order locks, idempotency, audit events and atomic transactions. Independent refunds do not change returned quantities or inventory.
+- **Rationale:** Prevents synthetic returns for unshipped orders, duplicate cash refunds and divergence between money and physical-goods records.
