@@ -1,91 +1,123 @@
 # MarginPilot
 
-پلتفرم تحلیل سود واقعی کالاها، مدیریت قیمت خرید تأمین‌کنندگان و شناسایی محصولات زیان‌ده — برای فروشگاه‌های اینترنتی، فروشندگان WooCommerce، عمده‌فروشان و کسب‌وکارهای کوچک و متوسط ایران.
+پلتفرم Mini-SaaS برای تحلیل سود واقعی کالاها، مقایسهٔ قیمت تأمین‌کنندگان و شناسایی محصولات زیان‌ده؛ با تمرکز اولیه بر فروشگاه‌ها و کسب‌وکارهای کوچک و متوسط ایران.
 
-**وضعیت:** Phase 1 (طراحی) تأیید شد · **Phase 2 / Step 1 (زیرساخت پایه + سازگاری وابستگی‌ها) اجرا شد** — هنوز هیچ قابلیت تجاری وجود ندارد: بدون Auth/Tenant/مدل دامنه/migration/محاسبات.
+**وضعیت محصول:** زیرساخت، هویت/نشست، tenancy/RBAC، کاتالوگ و تأمین‌کنندگان، ورود اطلاعات کالا و قیمت تأمین‌کننده و موتور مقایسهٔ قیمت در Backend پیاده‌سازی شده‌اند. قابلیت‌های فروش/هزینه، موتور سود واقعی، رابط کاربری محصول و گزارش‌های نهایی هنوز در نقشهٔ راه باقی‌اند.
 
-## چه چیزی در Phase 2 / Step 1 واقعاً هست
+**سیاست اجرایی مصوب:** رسیدن سریع به MVP قابل عرضه، با حداقل پیچیدگی لازم. صحت مالی، جداسازی tenant، امنیت پایه، تست واقعی PostgreSQL و بازیابی backup قابل مصالحه نیستند؛ معماری توزیع‌شده و قابلیت‌های سازمانی تا اثبات نیاز به بعد موکول‌اند.
 
-| بخش | محتوا | وضعیت اجرا در سندباکس |
-|---|---|---|
-| Backend | FastAPI + تنظیمات fail-fast + SQLAlchemy 2 engine + لاگ JSON + Request-ID + Error Schema + `/health/live` و `/health/ready` (`SELECT 1` واقعی) | ✅ ۳۶ unit test + ۳ integration با PostgreSQL 16.2 واقعی + smoke با uvicorn (شواهد: `download/evidence/*_r1.txt`) |
-| Frontend | React 19 + TS + Vite 8 + Tailwind 4 + RTL فارسی + Vazirmatn self-host؛ صفحهٔ وضعیت Backend | ✅ lint/type-check/۳ تست/build/preview |
-| Docker | Dockerfileهای non-root، docker-compose (۴ سرویس، healthcheck واقعی)، Caddyfile | ⚠️ فایل‌ها آماده؛ **اجرا نشده** (سندباکس daemon ندارد) — تست در CI/محلی شما |
-| CI | `.github/workflows/ci.yml` — ۱۶ گیت + PostgreSQL واقعی | ⚠️ فقط فایل — **اجرا نشده** |
-| وابستگی‌ها | exact pin + lock با hash + ماتریس سازگاری اجراشده + دو CVE برطرف | ✅ |
+## وضعیت تحویل‌شده
+
+| حوزه | وضعیت |
+|---|---|
+| زیرساخت، Docker Compose و CI | پیاده‌سازی‌شده؛ CI انتشارهای Phase 4 سبز بوده است |
+| Authentication و session امن | پیاده‌سازی‌شده در Phase 3 |
+| Tenancy و RBAC | پیاده‌سازی‌شده در Phase 3 |
+| کالا، دسته، واریانت، تأمین‌کننده و لیست قیمت | پیاده‌سازی‌شده در Phase 4 Step 1–2 |
+| Import کالا و قیمت تأمین‌کننده | پیاده‌سازی‌شده در Phase 4 Step 3؛ Sales import تا آماده‌شدن دامنهٔ فروش غیرفعال است |
+| مقایسهٔ قیمت تأمین‌کنندگان | Backend/API در Phase 4 Step 4؛ UI و export نهایی هنوز باقی است |
+| فروش، مرجوعی و هزینه‌ها | طراحی/قرارداد موجود؛ پیاده‌سازی اجرایی باقی است |
+| محاسبهٔ سود واقعی و قیمت پیشنهادی | اصول و بردارهای مرجع طراحی شده؛ موتور اجرایی باقی است |
+| داشبورد و گزارش‌های محصول | باقی است |
+
+برای جزئیات شواهد، محدودیت‌ها و معیار پذیرش به [نقشهٔ راه MVP](docs/mvp-roadmap.md) و [برنامهٔ Phase 4](docs/phase4-plan.md) مراجعه کنید.
+
+## نقشهٔ راه مصوب ادامهٔ پروژه
+
+- **Phase 5 — Sales & Expenses:** فروش، اقلام، مرجوعی، هزینه‌های مستقیم/مشترک و فعال‌سازی امن Sales import.
+- **Phase 6 — Financial Calculation Engine:** محاسبات deterministic و نسخه‌دار درآمد خالص، بهای تمام‌شده، سود و قیمت پیشنهادی.
+- **Phase 7 — MVP UI, Dashboard & Reports:** جریان‌های اصلی UI فارسی RTL، داشبورد ضروری، مقایسهٔ قابل استفاده و خروجی Excel/PDF.
+- **Phase 8 — Release Readiness:** E2E حیاتی، hardening امنیتی/کارایی متناسب با MVP، استقرار و backup/restore آزموده‌شده.
+
+Microservices، صف پیچیده، حسابداری کامل، گزارش‌ساز سفارشی، AI مالی، اپ موبایل و مقیاس‌پذیری سازمانی جزو MVP نیستند.
+
+## فناوری‌ها
+
+- Backend: Python 3.12، FastAPI، Pydantic v2، SQLAlchemy 2، Alembic، psycopg3
+- Database: PostgreSQL
+- Frontend: React، TypeScript، Vite، Tailwind، RTL فارسی
+- تست: Pytest/HTTPX، PostgreSQL integration، Vitest و CI
+- فایل‌ها: Pandas، OpenPyXL و ReportLab طبق نیاز قابلیت‌ها
+- پول: Decimal و PostgreSQL NUMERIC؛ محاسبات مالی در Backend
 
 ## اجرای محلی (Windows PowerShell)
 
-### الف) بدون Docker — توسعهٔ روزمره
+### Backend
 
 ```powershell
-# 0) یک‌بار: کلون و متغیرهای محیطی
-git clone <repo-url> ; cd MarginPilot
 Copy-Item .env.example .env
-notepad .env   # مقادیر واقعی (خصوصاً DATABASE_URL) را بگذارید
-#   نکته: .env باید در «ریشهٔ پروژه» باشد؛ backend حتی وقتی از پوشهٔ
-#   backend/ اجرا می‌شود آن را می‌خواند (مسیر نسبت به ریشهٔ پروژه، نه CWD).
-#   Environment Variables همیشه بر مقادیر فایل اولویت دارند.
-
-# 1) Backend — Python 3.12 لازم است
+# مقادیر محیطی را تنظیم کنید؛ DATABASE_URL باید از postgresql+psycopg:// استفاده کند.
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.lock --require-hashes
 uvicorn app.main:app --reload --port 8000
-#   تست: http://localhost:8000/health/live  و  /health/ready
+```
 
-# 2) Frontend — Node 24 لازم است (پنجرهٔ PowerShell جدید)
+Health endpoints:
+- `http://localhost:8000/health/live`
+- `http://localhost:8000/health/ready`
+
+### Frontend
+
+در پنجرهٔ PowerShell جداگانه:
+
+```powershell
 cd frontend
 npm ci
 npm run dev
-#   http://localhost:3000  — پورت ثابت است (strictPort در vite.config.ts):
-#   اگر 3000 اشغال باشد Vite با خطا متوقف می‌شود، بی‌صدا پورت عوض نمی‌کند.
-#   پروکسی /api به 8000 خودکار است.
-
-# 3) تست‌ها
-# backend (پنجرهٔ فعال با venv):
-cd backend ; pytest ; ruff check app tests ; mypy app
-# integration با PostgreSQL واقعی خودتان:
-$env:DATABASE_URL="postgresql+psycopg://marginpilot:<پسورد>@localhost:5432/marginpilot"
-pytest -m integration
-# frontend:
-cd frontend ; npm run lint ; npm run type-check ; npm test ; npm run build
 ```
 
-### ب) با Docker Compose — شبیه‌سازی کامل استقرار
+Vite روی پورت 3000 اجرا می‌شود و درخواست‌های `/api` را به Backend پروکسی می‌کند.
+
+### تست‌ها
 
 ```powershell
-Copy-Item .env.example .env ; notepad .env   # POSTGRES_PASSWORD را واقعی کنید
+# Backend (با venv فعال)
+cd backend
+pytest
+ruff check app tests
+mypy app
+
+# Frontend
+cd frontend
+npm run lint
+npm run type-check
+npm test
+npm run build
+```
+
+تست‌های integration باید با PostgreSQL واقعی اجرا شوند؛ SQLite یا mock جایگزین تست قیود و تراکنش‌های PostgreSQL نیست.
+
+### Docker Compose
+
+```powershell
+Copy-Item .env.example .env
+# POSTGRES_PASSWORD و سایر مقادیر را تنظیم کنید
 docker compose up -d --build
-docker compose ps          # هر ۴ سرویس (postgres/backend/frontend/caddy) باید healthy شوند
-curl.exe http://localhost:8080/api/health/ready   # {"status":"ready",...}
-curl.exe http://localhost:8080/healthz            # healthcheck خود Caddy
-# توقف: docker compose down   |  پاک‌سازی volume: docker compose down -v
+docker compose ps
+curl.exe http://localhost:8080/api/health/ready
+curl.exe http://localhost:8080/healthz
 ```
 
-**قاعدهٔ رمز URL-safe (P2-04):** متغیرهای `POSTGRES_USER/PASSWORD/DB` مستقیماً در ساخت `DATABASE_URL` داخل Compose درج می‌شوند؛ پس فقط حروف، ارقام و `-_.~` مجاز است (کاراکترهایی مثل `@ : / ? # % & = + فاصله` آدرس را خراب می‌کنند). تولید رمز امن ۱۹۲-بیتی:
+برای توقف محیط همین پروژه: `docker compose down`. از `docker compose down -v` فقط وقتی استفاده کنید که حذف volume داده‌های همین پروژه عمداً مدنظر باشد.
 
-```powershell
-$b=[byte[]]::new(24); [Security.Cryptography.RandomNumberGenerator]::Fill($b); ($b|%{$_.ToString('x2')}) -join ''
-# bash:  openssl rand -hex 24
-```
+## اسناد کلیدی
 
-> توجه: پورت‌های منتشرشده فقط `8080` (Caddy) است؛ PostgreSQL و Backend از بیرون ماشین در دسترس نیستند — عمدی و طبق SECURITY.md.
+- [نقشهٔ راه مصوب Mini-SaaS MVP](docs/mvp-roadmap.md)
+- [معماری](docs/architecture.md)
+- [مدل داده](docs/data-model.md)
+- [قرارداد API](docs/api-contract.md)
+- [اصول محاسبات مالی](docs/calculation-principles.md)
+- [کاتالوگ و دادهٔ تأمین‌کننده](docs/catalog-data.md)
+- [موتور مقایسه](docs/comparison-engine.md)
+- [برنامهٔ Phase 3](docs/phase3-plan.md) · [برنامهٔ Phase 4](docs/phase4-plan.md)
+- [امنیت](docs/security.md) · [استراتژی تست](docs/testing-strategy.md) · [وابستگی‌ها](docs/dependencies.md) · [تصمیم‌ها](docs/decisions.md)
+- [Changelog](CHANGELOG.md) · [Security Policy](SECURITY.md)
 
-## ساختار پروژه
+## قواعد انتشار
 
-```
-backend/   app/core (config,db,logging,errors,middleware) · app/api/v1/health · tests/{unit,integration}
-frontend/  src/features/welcome · src/lib/api.ts · src/App.tsx · src/main.tsx
-docs/      ۱۱ سند طراحی تأییدشدهٔ Phase 1 (معماری، مدل داده، API، امنیت، …)
-.github/   workflows/ci.yml
-```
-
-## سندهای طراحی (تأییدشدهٔ Phase 1)
-
-[معماری](docs/architecture.md) · [مدل داده](docs/data-model.md) · [قرارداد API](docs/api-contract.md) · [امنیت](docs/security.md) · [اصول محاسبات](docs/calculation-principles.md) · [استراتژی تست](docs/testing-strategy.md) · [تصمیم‌ها](docs/decisions.md) · [وابستگی‌ها](docs/dependencies.md) · [محدودیت محیط](docs/environment-limitations.md) · [SECURITY](SECURITY.md) · [CHANGELOG](CHANGELOG.md)
-
-## نقشهٔ راه
-
-Phase 0 (ممیزی) ✅ → Phase 1 (معماری + ۵ دور بازبینی) ✅ → **Phase 2 / Step 1 (زیرساخت) ✅ در انتظار بازبینی مستقل** → Phase 2 / Step 2+ → Phase 3 (Auth/Tenant/migration) → …
+- ریپوی canonical: `ijoolaie/MarginPilot`.
+- `main` و شاخه‌های انتشار فقط با مجوز صریح تغییر می‌کنند.
+- هر فاز پس از تست، بازبینی و به‌روزرسانی مستندات بسته می‌شود؛ سپس فاز بعد آغاز می‌شود.
+- وضعیت «تکمیل‌شده» فقط با کد اجرایی و شواهد تست/CI اعلام می‌شود؛ وجود سند طراحی به معنی پیاده‌سازی نیست.
