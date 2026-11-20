@@ -114,3 +114,34 @@ Step 1 تأیید شده است؛ Step 2 در ادامهٔ همین سند تع�
 - Runtime dependencies `openpyxl`, `defusedxml` and `python-multipart` are pinned and hash-locked.
 - Upload defaults: 25 MB, 100,000 rows, 200 columns, 1,000,000 total cells; ZIP limits are enforced by the parser.
 - No Docker global configuration, other project resources, main branch or remote Git state is changed by this step.
+
+
+## Step 4 ? Supplier Price Comparison Engine
+
+**Predecessor:** Phase 4 Step 3 is published on `phase4-step3-release` and approved.
+
+**Status:** Implemented and locally validated; publication and GitHub CI are pending.
+
+### Delivered
+
+- Tenant-scoped `comparison_runs` and `comparison_matches` with composite tenant-aware foreign keys, uniqueness constraints, state checks and supporting indexes for every non-primary-key foreign-key lookup.
+- Deterministic matching by SKU, normalized name, or SKU-then-name; Persian/Arabic character and digit normalization; ambiguous groups remain unresolved instead of being paired arbitrarily.
+- Comparison only between distinct finalized supplier price lists belonging to the active tenant.
+- Decimal price deltas and percentages, with `NUMERIC(26,4)` percentage storage covering the full range implied by `NUMERIC(20,2)` supplier prices.
+- New, removed, unmatched, uncertain and matched lines; incompatible units do not produce price deltas. Aggregate increase/decrease counters include confirmed pairs only.
+- Idempotent comparison-run creation, bounded result pagination, explicit manual match confirmation, atomic linking of both supplier-price rows, RBAC and audit events.
+- Comparison row-count limit is configurable with `COMPARISON_MAX_ROWS_PER_LIST` (default and maximum 100,000).
+
+### Acceptance evidence
+
+- Fresh PostgreSQL migration upgrade, `alembic check`, full downgrade to base and upgrade back to head.
+- Full backend suite: **114 passed** (70 unit + 44 PostgreSQL integration), including maximum supported price-percentage persistence and tenant-isolation cases.
+- Ruff, strict mypy, `pip check`, and hash-locked `pip-audit==2.10.1` (no known vulnerabilities).
+- `git diff --check` clean.
+
+### Security and operational boundaries
+
+- Comparison endpoints require `comparison:read` or `comparison:write`; all referenced lists, prices and products are validated within the active tenant.
+- Manual confirmation locks price rows and writes both product links and audit data in one transaction.
+- No local Docker build was run because the exact pinned Python base-image digest is not cached; no alternate digest or pull was used. GitHub CI, including Docker builds and secret scanning, is required before this branch is considered release-verified.
+- `main` is unchanged. This step is isolated on `phase4-step4-release`; no merge is part of this approval.

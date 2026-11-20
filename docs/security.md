@@ -163,4 +163,12 @@ CSP دقیق و تست‌شده (Phase 12) · dependency scanning فعال (Phas
 - The pipeline does not create a persistent `upload-tmp/` file. It reads the bounded multipart stream, parses in memory and stores only parsed row JSON plus metadata and SHA-256. Starlette's request spool is closed at the end of upload handling.
 - The parser rejects macro-bearing XLSX, external links, encrypted/unsafe ZIP entries, path traversal names, more than 2,000 ZIP entries, total uncompressed content above 100 MiB, per-entry expansion ratios above 100:1 for large entries, malformed CSV/XLSX, duplicate headers, over-wide rows and row/column limits.
 - CSV supports UTF-8/UTF-8-BOM and Windows-1256. XLSX formulas are never evaluated. Formula-like strings are neutralized in generated error workbooks.
-- Runtime upload defaults are 25 MiB, 100,000 data rows, 200 columns and 1,000,000 total cells. These are configurable through `UPLOAD_MAX_MB`, `IMPORT_MAX_ROWS` and `IMPORT_MAX_COLUMNS`.
+- Runtime upload defaults are 25 MiB, 100,000 data rows, 200 columns and 1,000,000 total cells. These are configurable through `UPLOAD_MAX_MB`, `IMPORT_MAX_ROWS`, `IMPORT_MAX_COLUMNS` and `IMPORT_MAX_CELLS`.
+
+
+### Implemented comparison controls - Phase 4 Step 4
+
+- Comparison reads and writes are tenant-scoped and guarded by `comparison:read` / `comparison:write`; every referenced supplier, list, price row and product is checked against the active tenant.
+- Comparison runs require finalized price lists, distinct list IDs and an idempotency key. Match confirmation locks the relevant price rows, validates both sides and product links, then commits both links and audit event in one transaction.
+- Ambiguous name groups are never paired by arbitrary ordering. Price deltas are omitted for missing or incompatible units; aggregate increase/decrease counters include confirmed matches only.
+- Audit events: `comparison.run.created`, `comparison.matches.reviewed`.

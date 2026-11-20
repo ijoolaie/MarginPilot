@@ -71,7 +71,7 @@ marginpilot/
 │   │   │   ├── expenses/            # expense types + allocation strategies
 │   │   │   ├── imports/             # state machine ورود داده CSV/XLSX
 │   │   │   ├── pricing/             # موتور محاسبه خالص + قیمت پیشنهادی + formula registry
-│   │   │   ├── comparison/          # مقایسهٔ لیست قیمت تأمین‌کنندگان
+│   │   │   ├── comparison/          # مقایسهٔ لیست قیمت تأمین‌کنندگان و تطبیق
 │   │   │   ├── analytics/           # گزارش‌های تجمیعی (فقط از موتور pricing تغذیه می‌شود)
 │   │   │   ├── reporting/           # PDF/XLSX/CSV + متادیتای گزارش
 │   │   │   └── audit/               # audit_logs

@@ -98,6 +98,7 @@ class Settings(BaseSettings):
     import_max_rows: int = Field(default=100000, ge=1, le=100000)
     import_max_columns: int = Field(default=200, ge=1, le=200)
     import_max_cells: int = Field(default=1000000, ge=1, le=1000000)
+    comparison_max_rows_per_list: int = Field(default=100000, ge=1, le=100000)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(default="INFO")
     log_format: Literal["json", "console"] = Field(default="json")
 

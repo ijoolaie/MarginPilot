@@ -244,3 +244,8 @@ erDiagram
 ### Phase 4 Step 3 additive import schema details
 
 `imports` also carries nullable `supplier_id` (tenant-aware composite FK), `price_list_title` and `received_at` for supplier-price imports. A database check requires those fields for `kind='supplier_prices'` and prohibits a supplier link for other kinds. `imports.kind` reserves `sales` for the future sales-import workflow; the current API does not accept it. `import_rows` enforces `row_number > 1`, object-shaped `raw`/`normalized` JSONB and array-shaped `errors` JSONB. Optional JSONB values are stored as SQL NULL (not JSON `null`) so the database checks and idempotency response-state constraint remain meaningful.
+
+
+### Phase 4 Step 4 comparison schema details
+
+`comparison_runs` and `comparison_matches` are tenant-owned. Both price-list references and every optional price/product reference use tenant-aware composite foreign keys. `comparison_matches.base_price_id` is nullable so target-only additions can be represented; `target_price_id` is nullable for base-only removals. A CHECK requires at least one side. Partial unique indexes prevent a supplier-price row from appearing more than once per side in one run. Additional indexes cover every non-primary-key foreign-key lookup (`created_by`, both price-list references, both price-row references, and both product references). `price_delta_pct` uses `NUMERIC(26,4)`, sized for the full percentage range implied by `supplier_prices.unit_price NUMERIC(20,2)`. Delta fields are nullable for unmatched or non-comparable units.

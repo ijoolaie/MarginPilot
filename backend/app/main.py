@@ -22,6 +22,7 @@ from app.core.middleware import (
     UploadBodyLimitMiddleware,
 )
 from app.modules.catalog.router import router as catalog_router
+from app.modules.comparison.router import router as comparison_router
 from app.modules.identity.router import router as identity_router
 from app.modules.imports.router import router as imports_router
 from app.modules.tenancy.router import router as tenancy_router
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     application.include_router(identity_router, prefix="/api/v1")
     application.include_router(tenancy_router, prefix="/api/v1")
     application.include_router(catalog_router, prefix="/api/v1")
+    application.include_router(comparison_router, prefix="/api/v1")
     application.include_router(imports_router, prefix="/api/v1")
 
     @application.exception_handler(StarletteHTTPException)

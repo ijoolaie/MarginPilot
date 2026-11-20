@@ -101,14 +101,19 @@ class TestSettingsFailFast:
         with pytest.raises(ValidationError):
             make_settings(env)
 
+    def test_comparison_row_limit_default_and_upper_bound(self) -> None:
+        settings = make_settings(VALID_ENV)
+        assert settings.comparison_max_rows_per_list == 100000
+        env: dict[str, Any] = {**VALID_ENV, "COMPARISON_MAX_ROWS_PER_LIST": "100001"}
+        with pytest.raises(ValidationError):
+            make_settings(env)
+
     def test_unknown_env_keys_are_ignored(self) -> None:
         env: dict[str, str] = {**VALID_ENV, "FUTURE_KEY": "x"}
         settings = make_settings(env)
         assert settings.database_url == VALID_ENV["DATABASE_URL"]
 
-    def test_cache_reset(
-        self, monkeypatch: pytest.MonkeyPatch, isolated_env_file: Path
-    ) -> None:
+    def test_cache_reset(self, monkeypatch: pytest.MonkeyPatch, isolated_env_file: Path) -> None:
         monkeypatch.setenv("DATABASE_URL", VALID_ENV["DATABASE_URL"])
         reset_settings_cache()
         first = load_settings()

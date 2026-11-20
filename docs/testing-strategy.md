@@ -75,3 +75,8 @@ Lint (ruff) → Type check (mypy) → Unit → Integration (postgres service) �
 - Parser unit tests: UTF-8-BOM and Windows-1256 CSV, delimiter detection, empty/duplicate headers, row/column limits, malformed/binary CSV, XLSX visible-sheet parsing, macro/zip-bomb rejection, exact mapping constraints, Persian digit/unit normalization, Decimal scale/range and duplicate classification.
 - API integration tests on PostgreSQL: upload and metadata, product preview/commit, price-history provenance, supplier-price import as draft, explicit finalization, error-row pagination and XLSX report, formula neutralization, tenant isolation, RBAC, invalid extension/MIME, XLSX upload, idempotent replay and atomic rollback/retry.
 - The original upload bytes must not be present in the import database records or written to a project upload directory; only raw parsed row objects and the SHA-256 digest are retained.
+
+
+## Phase 4 Step 4 comparison coverage
+
+Unit coverage validates deterministic SKU/name matching, Persian/Arabic normalization, fallback matching, ambiguous groups, unmatched additions/removals, Decimal deltas and percentages, zero base price, incompatible units and existing product-link conflicts. PostgreSQL integration coverage validates migrations, finalized-list guards, idempotent creation/replay/conflict, manual peer resolution, atomic product linking, audit, RBAC, tenant isolation and the maximum supported price-percentage boundary.

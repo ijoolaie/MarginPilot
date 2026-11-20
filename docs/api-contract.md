@@ -240,3 +240,8 @@ All paths above are prefixed with `/api/v1`. `POST /imports` is `multipart/form-
 Product mappings: `sku`, `name`, `unit` (required); `description`, `sale_price`, `purchase_cost`, `is_active` (optional). Supplier-price mappings: `raw_name`, `unit_price`, `unit` (required); `sku`, `currency` (optional). Mapping values must reference unique, exact headers returned by upload. Confirmation commits valid rows only and reports skipped error/duplicate rows. Supplier-price confirmation creates a **draft** price list; a separate explicit finalize action is required.
 
 `POST /imports/{id}/confirm` requires a 1–255 character `Idempotency-Key`. The stored result is scoped by tenant and user; a repeated identical request replays the original response. Reusing the key for a different operation/path returns 409. Confirmation, domain writes, price history, audit and idempotency result share one transaction.
+
+
+#### Phase 4 Step 4 comparison behavior
+
+`POST /comparison/runs` accepts `sku`, `normalized_name`, or `sku_then_name`; it requires an `Idempotency-Key` and compares only distinct final lists in the active tenant. `GET /comparison/runs` and `GET /comparison/runs/{id}` require `comparison:read`. `POST /comparison/runs/{id}/confirm-matches` requires `comparison:write`; confirm decisions require an active `product_id`, and ambiguous one-sided rows additionally require `peer_price_id` from the opposite list. The server validates tenant, list side, unit equality and existing product links before atomically linking both price rows.
