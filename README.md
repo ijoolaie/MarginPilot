@@ -105,6 +105,7 @@ curl.exe http://localhost:8080/healthz
 ## اسناد کلیدی
 
 - [نقشهٔ راه مصوب Mini-SaaS MVP](docs/mvp-roadmap.md)
+- [برنامهٔ اجرایی Phase 5 — Sales & Expenses](docs/phase5-plan.md)
 - [معماری](docs/architecture.md)
 - [مدل داده](docs/data-model.md)
 - [قرارداد API](docs/api-contract.md)
