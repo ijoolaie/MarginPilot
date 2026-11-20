@@ -33,13 +33,13 @@
 
 اگر اجرای محلی Postgres بین سندباکس و CI لازم شود (بدون Docker و root)، باینری‌های embedded-postgres بدون root در فازهای بعدی به‌عنوان ابزار توسعه آزمایش می‌شود؛ **در Phase 2 همین مسیر با `pgserver` یک‌بار به‌صورت ad-hoc تست شد** (وابستگی ثبت‌نشده، فقط ابزار تأیید).
 
-## ۴) Runbook پذیرش محلی (پیش‌نویس — نهایی در Phase 14)
+## ۴) Runbook پذیرش محلی (پیش‌نویس — نهایی در Phase 8)
 
 1. کلون ریپو → `cp .env.example .env` و تنظیم مقادیر.
 2. `docker compose up -d --build` → healthcheck هر چهار سرویس سبز.
 3. `docker compose exec backend alembic upgrade head` (از Phase 3).
 4. اجرای دستی سناریوی §۵ `testing-strategy.md`.
-5. Backup/Restore drill طبق مستند Phase 14.
+5. Backup/Restore drill طبق مستند Phase 8.
 
 دستورات دقیق PowerShell برای همین مرحله: README.md §اجرای محلی.
 
