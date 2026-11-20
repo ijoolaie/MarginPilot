@@ -142,3 +142,18 @@ Target Margin Pricing   = Total Cost ÷ (1 − Target Margin)      (۰ ≤ margi
 - Independent refunds are sourced from `sales_refunds`; they are not physical returns and must never contribute to `return_variance`.
 - An order cancelled before shipment creates no recognized sales revenue or operational COGS. Its receipt/refund is excluded from sales-profit calculation in v1. Actual costs associated with cancelled orders remain reportable under the cancelled-order cost rules in section 5.2.
 - Combined independent refunds and return refunds are capped at the net amount received. In v1, `paid` means the full net order amount was received; partial payments are out of scope.
+
+### 6.5 Period reporting recognition policy (Phase 6)
+
+Period analytics use event-date recognition rather than rewriting the originating sale period:
+
+- Completed-order revenue and original COGS are recognized in the report period containing `sales_orders.order_date`. Only orders whose current status is `completed` contribute sales.
+- Each committed physical return is recognized in the report period containing `sales_returns.return_date`, even when its source order was completed in an earlier period. The period receives the actual refund as a negative revenue event, the returned quantity's snapshotted unit cost as a negative COGS event (when known), and the FV-2 return variance. Do not also subtract those returns from the originating order's earlier period.
+- A return event must use immutable `sales_return_items` joined to its `sales_returns` header and the source `sale_items` snapshots. Do not use the mutable `sale_items.returned_quantity/refund_amount` cache as its historical source.
+- Independent refunds for cancelled-before-shipment orders (`sales_refunds`) are excluded from sales revenue, COGS, and return variance, per ADR-028.
+- Period-scoped expenses are included by inclusive overlap proration under §5.6. One-off expenses are included by `expense_date`; they are not prorated.
+- Order-scoped expenses attached to cancelled orders are included as unallocated costs in the report period containing the expense's `expense_date`. Order-scoped expenses attached to completed orders are included in the originating sale's period and allocated only within that order.
+- Product-scoped expenses are consumed only by product-level analytics, never by order profit or the period-wide summary. Period expenses may be allocated to products/items using their declared `allocation_strategy`, after period sales and return events are assembled.
+- Tenant currency is the only reporting currency. Any contributing record with a different currency fails explicitly with `CURRENCY_MISMATCH`; no cross-currency aggregation or implicit conversion is allowed.
+- Unknown unit cost remains unknown. Report known-cost and unknown-cost revenue separately; never substitute zero COGS or a fabricated profit.
+- Each period/product calculation journals its full immutable event and allocation inputs, report range, formula version, warnings, and data-through timestamp. Re-running a past range after a later-dated return must not backdate that return into the earlier range.
