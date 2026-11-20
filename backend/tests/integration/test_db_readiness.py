@@ -18,9 +18,7 @@ pytestmark = pytest.mark.integration
 client = TestClient(app)
 
 
-@pytest.mark.skipif(
-    not os.environ.get("DATABASE_URL"), reason="DATABASE_URL not configured"
-)
+@pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="DATABASE_URL not configured")
 class TestRealPostgresReadiness:
     def test_direct_select_one_succeeds(self) -> None:
         assert check_database_connection() is True

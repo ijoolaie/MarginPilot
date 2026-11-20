@@ -1,7 +1,6 @@
-# MarginPilot CI — Phase 2 / Step 1 (infrastructure foundation).
-# Real PostgreSQL service (no SQLite, no mocks). No migrations yet — the
-# schema arrives in Phase 3, so only the real connection + readiness path is
-# exercised. Every gate below is mandatory: a failure fails the whole CI.
+# MarginPilot CI — Phase 3 / Step 1 (persistence foundation).
+# Real PostgreSQL service (no SQLite, no mocks). Migrations are applied and
+# round-tripped before integration checks. Every gate is mandatory.
 
 name: ci
 
@@ -16,7 +15,7 @@ jobs:
     services:
       # Stage 8: real PostgreSQL service. Pinned to the SAME verified digest
       # as docker-compose.yml (evidence: download/evidence/image_digests.json,
-      # tag 16-alpine) — CI and Compose run byte-identical images.
+      # tag 16-alpine) - CI and Compose run byte-identical images.
       postgres:
         image: postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
         env:
@@ -29,7 +28,7 @@ jobs:
           --health-cmd "pg_isready -U marginpilot -d marginpilot"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      # CI-only throwaway credentials — not repository secrets.
+      # CI-only throwaway credentials - not repository secrets.
       DATABASE_URL: postgresql+psycopg://marginpilot:ci-test-password@localhost:5432/marginpilot
     steps:
       - name: 1. Checkout
@@ -45,7 +44,7 @@ jobs:
 
       - name: 5. Ruff
         working-directory: backend
-        run: ruff check app tests
+        run: ruff check app tests alembic
 
       - name: 6. mypy (strict)
         working-directory: backend
@@ -69,7 +68,14 @@ jobs:
           test "$ready" = "503" || { echo "ready expected 503 (unreachable DB), got $ready"; exit 1; }
           kill %1
 
-      - name: 9. Real PostgreSQL readiness (integration, no migrations by design)
+      - name: 8. Alembic migration round-trip (real PostgreSQL)
+        working-directory: backend
+        run: |
+          alembic upgrade head
+          alembic check
+          alembic downgrade base
+          alembic upgrade head
+      - name: 9. Real PostgreSQL readiness (integration after migration round-trip)
         working-directory: backend
         run: pytest -m integration
 

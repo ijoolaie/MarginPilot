@@ -32,6 +32,7 @@
 | SQLAlchemy | 2.1.8 | — |
 | alembic | 1.20.1 | — (در deps هست؛ migration از Phase 3) |
 | psycopg / psycopg-binary | 3.3.9 | — |
+| argon2-cffi | 25.1.0 | Argon2id password hashing (Phase 3 identity) |
 | httpx2 | 2.16.2 | مهاجرت TestClient مطابق API رسمی Starlette؛ جایگزین httpx قدیمی |
 | pytest | **9.0.3** | ⚠️ امنیتی: 9.0.2 → **PYSEC-2026-1845**؛ bump به نسخهٔ fix |
 | pytest-asyncio / pytest-cov | 1.3.0 / 7.0.0 | — |
@@ -71,3 +72,13 @@ Frontend: `package.json` exact + `package-lock.json`؛ `npm ci` در محیط ت
 CI: GitHub Actions (ubuntu-latest) + سرویس PostgreSQL واقعی (`postgres:16-alpine`) برای integration.
 
 در v1 اضافه نمی‌شوند: polars، celery، redis-server (فقط fakeredis برای تست)، هر AI SDK، PyJWT (بازیابی رمز با توکن تصادفی یک‌بارمصرف — ADR-003 به‌روزرسانی‌شده؛ بدون JWT در کل v1).
+
+## Phase 4 Step 3 runtime additions
+
+| Package | Pin | Purpose |
+|---|---:|---|
+| `openpyxl` | `3.1.5` | Read-only XLSX parsing and generated XLSX error reports |
+| `defusedxml` | `0.7.1` | Harden XML parsing for untrusted XLSX archives |
+| `python-multipart` | `0.0.34` | FastAPI multipart upload parsing |
+
+All three are direct runtime dependencies in `pyproject.toml` and are pinned with hashes in both `requirements-runtime.lock` and `requirements.lock`.

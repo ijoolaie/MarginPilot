@@ -69,3 +69,9 @@ Lint (ruff) → Type check (mypy) → Unit → Integration (postgres service) �
 ## ۷) تعریف «تمام‌شده» برای هر قابلیت
 
 کد + تست سبز در CI (نه فقط محلی) + مستند به‌روز + آیتم‌های وضعیت `IMPLEMENTED`/`TESTED`/`VERIFIED` فقط با شواهد اجرا (خروجی تست). مطابق شرط G: هیچ ادعایی بدون خروجی واقعی.
+
+## Phase 4 Step 3 import test coverage
+
+- Parser unit tests: UTF-8-BOM and Windows-1256 CSV, delimiter detection, empty/duplicate headers, row/column limits, malformed/binary CSV, XLSX visible-sheet parsing, macro/zip-bomb rejection, exact mapping constraints, Persian digit/unit normalization, Decimal scale/range and duplicate classification.
+- API integration tests on PostgreSQL: upload and metadata, product preview/commit, price-history provenance, supplier-price import as draft, explicit finalization, error-row pagination and XLSX report, formula neutralization, tenant isolation, RBAC, invalid extension/MIME, XLSX upload, idempotent replay and atomic rollback/retry.
+- The original upload bytes must not be present in the import database records or written to a project upload directory; only raw parsed row objects and the SHA-256 digest are retained.

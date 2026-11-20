@@ -1,7 +1,6 @@
 """SQLAlchemy 2 engine + PostgreSQL connectivity check (real `SELECT 1`).
 
-No models, no Base metadata, no migrations in Phase 2 Step 1 — the schema
-arrives with Alembic in Phase 3 (negotiable constraint).
+Declarative persistence models and Alembic migrations are introduced in Phase 3.
 """
 
 import logging
@@ -84,6 +83,6 @@ def check_database_connection() -> bool:
     except SQLAlchemyError as exc:
         logger.warning("event=database_check_failed error_type=%s", type(exc).__name__)
         return False
-    except Exception:  # noqa: BLE001 — readiness must degrade to 503, not 500
+    except Exception:  # noqa: BLE001 - readiness must degrade to 503, not 500
         logger.exception("event=database_check_unexpected_error")
         return False

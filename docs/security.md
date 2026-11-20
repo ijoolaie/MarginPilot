@@ -156,3 +156,11 @@ sequenceDiagram
 ## ۱۲) باقی‌مانده‌های امنیتی برای فازهای بعد
 
 CSP دقیق و تست‌شده (Phase 12) · dependency scanning فعال (Phase 2) · IDOR خودکار روی همهٔ endpointها (Phase 12) · Backup security و restore drill (Phase 14) · تأیید ایمیل (بعد از سرویس ایمیل) · rate limit per-tenant در tenant_settings (بعد از v1).
+
+### Implemented import hardening — Phase 4 Step 3
+
+- `openpyxl==3.1.5` is used with `read_only=True`, `data_only=True`, `keep_links=False`; `defusedxml==0.7.1` is installed so openpyxl uses hardened XML parsers.
+- The pipeline does not create a persistent `upload-tmp/` file. It reads the bounded multipart stream, parses in memory and stores only parsed row JSON plus metadata and SHA-256. Starlette's request spool is closed at the end of upload handling.
+- The parser rejects macro-bearing XLSX, external links, encrypted/unsafe ZIP entries, path traversal names, more than 2,000 ZIP entries, total uncompressed content above 100 MiB, per-entry expansion ratios above 100:1 for large entries, malformed CSV/XLSX, duplicate headers, over-wide rows and row/column limits.
+- CSV supports UTF-8/UTF-8-BOM and Windows-1256. XLSX formulas are never evaluated. Formula-like strings are neutralized in generated error workbooks.
+- Runtime upload defaults are 25 MiB, 100,000 data rows, 200 columns and 1,000,000 total cells. These are configurable through `UPLOAD_MAX_MB`, `IMPORT_MAX_ROWS` and `IMPORT_MAX_COLUMNS`.

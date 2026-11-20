@@ -1,7 +1,7 @@
 [project]
 name = "marginpilot-backend"
 version = "0.1.0"
-description = "MarginPilot backend — FastAPI modular monolith (Phase 2 / Step 1: infrastructure foundation only)"
+description = "MarginPilot backend — FastAPI modular monolith"
 requires-python = ">=3.12,<3.13"
 # Exact pins per docs/dependencies.md (Phase 2 compatibility matrix).
 # Transitive dependencies are resolved + hashed into requirements.lock.
@@ -16,6 +16,10 @@ dependencies = [
     "alembic==1.20.1",
     "psycopg==3.3.9",
     "psycopg-binary==3.3.9",
+    "argon2-cffi==25.1.0",
+    "defusedxml==0.7.1",
+    "openpyxl==3.1.5",
+    "python-multipart==0.0.34",
 ]
 
 [project.optional-dependencies]

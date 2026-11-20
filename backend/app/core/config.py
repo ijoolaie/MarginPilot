@@ -1,9 +1,8 @@
-"""Application configuration — environment variables only, fail-fast (architecture.md §7).
+"""Application configuration - validated environment settings.
 
-Only settings with a real consumer in Phase 2 / Step 1 are declared here.
-Other keys in .env.example (sessions, rate limits, idempotency, ...) are
-reserved for later phases and are intentionally NOT read yet (no speculative
-config — architecture.md §9).
+Only settings with an active runtime consumer are declared. Phase 3 identity
+consumes the session-cookie, session-timeout, login-rate-limit, and lockout
+settings. Registration is disabled by default; tenant creation is capped per user.
 
 Loading strategy: pydantic-settings' implicit env/dotenv sources were found
 NOT to populate values in this sandbox (all released versions tested —
@@ -81,6 +80,24 @@ class Settings(BaseSettings):
     db_pool_size: int = Field(default=10, ge=1)
     db_max_overflow: int = Field(default=20, ge=0)
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    session_idle_timeout_minutes: int = Field(default=10080, ge=5, le=43200)
+    session_absolute_timeout_minutes: int = Field(default=43200, ge=60, le=129600)
+    session_cookie_name: str = Field(
+        default="mp_session", min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"
+    )
+    session_cookie_secure: bool = Field(default=True)
+    session_cookie_samesite: Literal["lax", "strict"] = Field(default="lax")
+    rate_limit_login_per_minute: int = Field(default=5, ge=1, le=100)
+    login_lockout_threshold: int = Field(default=10, ge=3, le=100)
+    login_lockout_minutes: int = Field(default=15, ge=1, le=1440)
+    allow_registration: bool = Field(default=False)
+    rate_limit_register_per_hour: int = Field(default=3, ge=1, le=100)
+    max_tenants_per_user: int = Field(default=5, ge=1, le=100)
+    idempotency_ttl_hours: int = Field(default=24, ge=1, le=168)
+    upload_max_mb: int = Field(default=25, ge=1, le=25)
+    import_max_rows: int = Field(default=100000, ge=1, le=100000)
+    import_max_columns: int = Field(default=200, ge=1, le=200)
+    import_max_cells: int = Field(default=1000000, ge=1, le=1000000)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(default="INFO")
     log_format: Literal["json", "console"] = Field(default="json")
 
@@ -112,6 +129,8 @@ class Settings(BaseSettings):
     def _environment_rules(self) -> "Settings":
         # Production hard-fails on insecure logging config; cookie/TLS rules come
         # with the auth phase (their consumers do not exist yet).
+        if self.app_env == "production" and not self.session_cookie_secure:
+            raise ValueError("SESSION_COOKIE_SECURE must be true in production.")
         if self.app_env == "production" and self.log_format == "console":
             raise ValueError("LOG_FORMAT=console is not allowed in production (JSON only).")
         return self

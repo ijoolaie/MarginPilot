@@ -21,9 +21,7 @@ DSN = f"postgresql+psycopg://marginpilot:{SECRET}@localhost:5432/marginpilot"
 # P2-05: a password written URL-encoded in the DSN (p@ss!w0rd escaped).
 ENCODED_PASSWORD = "p%40ss%21w0rd"
 DECODED_PASSWORD = "p@ss!w0rd"
-ENCODED_DSN = (
-    f"postgresql+psycopg://marginpilot:{ENCODED_PASSWORD}@localhost:5432/marginpilot"
-)
+ENCODED_DSN = f"postgresql+psycopg://marginpilot:{ENCODED_PASSWORD}@localhost:5432/marginpilot"
 
 client = TestClient(app)
 
@@ -43,9 +41,7 @@ def boom_route() -> Any:
 class TestUnhandledExceptionGuarantees:
     """P1-03: an unexpected 500 must still carry all four guarantees."""
 
-    def test_500_carries_request_id_security_headers_and_no_leak(
-        self, boom_route: Any
-    ) -> None:
+    def test_500_carries_request_id_security_headers_and_no_leak(self, boom_route: Any) -> None:
         response = client.get(BOOM_PATH)
         assert response.status_code == 500
         request_id = response.headers["X-Request-ID"]
@@ -66,9 +62,7 @@ class TestUnhandledExceptionGuarantees:
         assert "RuntimeError" not in response.text
         assert "Traceback" not in response.text
 
-    def test_500_request_id_matches_across_header_and_body(
-        self, boom_route: Any
-    ) -> None:
+    def test_500_request_id_matches_across_header_and_body(self, boom_route: Any) -> None:
         first = client.get(BOOM_PATH)
         second = client.get(BOOM_PATH)
         assert first.headers["X-Request-ID"] != second.headers["X-Request-ID"]

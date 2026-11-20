@@ -113,6 +113,7 @@
 | POST | /products | product:write | SKU یکتا در tenant (قواعد §۵ مدل داده) |
 | GET | /products/{id} | product:read | |
 | PATCH | /products/{id} | product:write | تغییر sale_price/purchase_cost → ردیف در `product_price_history` + Audit |
+| POST | /products/{id}/purchase-cost-from-supplier-price | product:write | اقدام صریح برای تنظیم بهای خرید مرجع از یک supplier_price نهایی، هم‌ارز از نظر ارز و واحد؛ ثبت provenance و Audit در همان تراکنش |
 | DELETE | /products/{id} | product:write | soft delete |
 | GET | /products/{id}/price-history | product:read | از جدول `product_price_history` (change_type=purchase\|sale) |
 | GET/POST | /categories · PATCH/DELETE /categories/{id} | product:read/write | درختی؛ یکتایی ریشه/زیردسته طبق مدل §۵ |
@@ -124,11 +125,13 @@
 |---|---|---|---|
 | GET/POST | /suppliers | supplier:read/write | CRUD + فیلتر |
 | PATCH/DELETE | /suppliers/{id} | supplier:write | DELETE = soft |
-| POST | /suppliers/{id}/price-lists | supplier:write | لیست دستی (title, received_at, items[]) |
+| POST | /suppliers/{id}/price-lists | supplier:write | ایجاد draft دستی با title، received_at و items[]؛ هر item شامل raw_name، sku?، product_id?، unit_price، currency و unit الزامی است |
 | GET | /suppliers/{id}/price-lists | supplier:read | |
 | GET | /price-lists/{id} | supplier:read | اقلام لیست |
+| POST | /price-lists/{id}/finalize | supplier:write | نهایی‌سازی یک draft غیرخالی؛ پس از final تغییرناپذیر است |
+| DELETE | /price-lists/{id} | supplier:write | حذف فقط draft؛ لیست نهایی حذف‌پذیر نیست |
 | GET | /suppliers/{id}/price-history?product_id= | supplier:read | روند قیمت خرید از supplier_prices (ترتیب received_at لیست‌ها) |
-| GET | /suppliers/lowest-price?product_id= | supplier:read | کمترین قیمت بین لیست‌های final؛ **فقط ردیف‌های هم‌ارز tenant** (ارز = ارز tenant) و هم‌unit مقایسه می‌شوند؛ ردیف‌های با unit متفاوت از مقایسه خارج و در پاسخ با پرچم `excluded_units` گزارش می‌شوند |
+| GET | /suppliers/lowest-price?product_id= | supplier:read | کمترین قیمت از لیست‌های final و ارز tenant؛ فقط ردیف‌های دارای product_id و unit برابر واحد محصول مقایسه می‌شوند؛ واحدهای دیگر در `excluded_units` گزارش می‌شوند |
 
 ### 3.6 sales
 
@@ -161,7 +164,7 @@
 | PATCH | /imports/{id}/mapping | import:execute | mapping → اعتبارسنجی مجدد + preview (۲۰ ردیف + شمارش خطا/هشدار/تکراری) |
 | GET | /imports/{id}/rows?status=error | import:read | خطاهای صفحه‌بندی‌شده |
 | POST | /imports/{id}/confirm | import:execute | **Idempotency-Key اجباری**؛ فقط از `awaiting_confirmation` → commit اتمی ردیف‌های valid + گزارش |
-| GET | /imports · /imports/{id} | import:read | تاریخچه/جزئیات |
+| GET | /imports · /imports/{id} | import:read | تاریخچه/جزئیات با عنوان لیست، تأمین‌کننده و قیمت/واحد هر طرف |
 | GET | /imports/{id}/error-report.xlsx | import:read | دانلود خطاها — مجوز import:read + scope tenant + فقط importهای همان tenant (security §۹) |
 | DELETE | /imports/{id} | import:execute | فقط pre-commit |
 
@@ -229,3 +232,11 @@
 - توکن CSRF در پاسخ login/me از هدر `X-CSRF-Token` خوانده و فقط در حافظهٔ برنامه نگه داشته می‌شود (کوکی CSRF وجود ندارد).
 - نمایش اعداد با Intl (fa-IR) و واحد پول tenant؛ ذخیرهٔ دادهٔ حساس در مرورگر ممنوع.
 - TypeScript types از OpenAPI — اتصال در Phase بعد از طراحی frontend.
+
+#### Phase 4 Step 3 implemented import contract
+
+All paths above are prefixed with `/api/v1`. `POST /imports` is `multipart/form-data`: `kind=products|supplier_prices`, `file`, optional XLSX `sheet_name`; supplier-price imports additionally require `supplier_id` and accept `price_list_title` and `received_at`. `sales` remains reserved and returns `422 IMPORT_KIND_NOT_READY`.
+
+Product mappings: `sku`, `name`, `unit` (required); `description`, `sale_price`, `purchase_cost`, `is_active` (optional). Supplier-price mappings: `raw_name`, `unit_price`, `unit` (required); `sku`, `currency` (optional). Mapping values must reference unique, exact headers returned by upload. Confirmation commits valid rows only and reports skipped error/duplicate rows. Supplier-price confirmation creates a **draft** price list; a separate explicit finalize action is required.
+
+`POST /imports/{id}/confirm` requires a 1–255 character `Idempotency-Key`. The stored result is scoped by tenant and user; a repeated identical request replays the original response. Reusing the key for a different operation/path returns 409. Confirmation, domain writes, price history, audit and idempotency result share one transaction.

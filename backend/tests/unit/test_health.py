@@ -35,9 +35,7 @@ class TestLive:
 
 
 class TestReady:
-    def test_ready_success_returns_200(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_ready_success_returns_200(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(health_module, "check_database_connection", lambda: True)
         response = client.get("/health/ready")
         assert response.status_code == 200
@@ -57,9 +55,7 @@ class TestReady:
         assert "localhost" not in body_text
         assert "postgresql" not in body_text
 
-    def test_ready_failure_when_check_raises(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_ready_failure_when_check_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
         def boom() -> bool:
             raise RuntimeError("simulated crash")
 
@@ -67,9 +63,7 @@ class TestReady:
         response = client.get("/health/ready")
         assert response.status_code == 503
 
-    def test_real_check_function_is_used_in_module(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_real_check_function_is_used_in_module(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # Guard against accidentally stubbing the real function in app wiring.
         assert health_module.check_database_connection is check_database_connection
 

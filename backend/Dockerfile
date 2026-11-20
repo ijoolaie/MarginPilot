@@ -17,6 +17,8 @@ COPY requirements-runtime.lock ./
 RUN pip install --no-cache-dir --require-hashes -r requirements-runtime.lock
 
 COPY pyproject.toml ./
+COPY alembic.ini ./
+COPY alembic ./alembic
 COPY app ./app
 
 USER marginpilot

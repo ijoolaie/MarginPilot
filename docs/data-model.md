@@ -1,6 +1,6 @@
 # مدل داده MarginPilot — ERD و مشخصات جداول (نسخهٔ اصلاح‌شدهٔ بازبینی Phase 1)
 
-**وضعیت:** طراحی اصلاح‌شده بر اساس بازبینی فنی (دور دوم — اصلاحات نهایی). تغییرات کلیدی نسبت به نسخهٔ قبل: جداسازی tenant در سطح **DB با FKهای مرکب**، جداول جدید `product_price_history` و `idempotency_keys`، **موجودیت‌های مستقل مرجوعی (`sales_returns`/`sales_return_items`)**، **FK سه‌ستونهٔ variant↔product**، حذف `supplier_id` از supplier_prices، رفع یکتایی دسته‌های ریشه و قواعد SKU، قواعد صریح یکتایی supplier_prices، شفاف‌سازی ارز و نقش‌های سراسری. DDL واقعی با Alembic از Phase 3؛ این سند قرارداد مدل است.
+**وضعیت:** طراحی اصلاح‌شده بر اساس بازبینی فنی (دور دوم — اصلاحات نهایی). تغییرات کلیدی نسبت به نسخهٔ قبل: جداسازی tenant در سطح **DB با FKهای مرکب**، جداول جدید `product_price_history` و `idempotency_keys`، **موجودیت‌های مستقل مرجوعی (`sales_returns`/`sales_return_items`)**، **FK سه‌ستونهٔ variant↔product**، حذف `supplier_id` از supplier_prices، رفع یکتایی دسته‌های ریشه و قواعد SKU، قواعد صریح یکتایی supplier_prices، شفاف‌سازی ارز و نقش‌های سراسری. DDL واقعی با Alembic به‌صورت مرحله‌ای در Phase 3 و Phase 4 پیاده‌سازی می‌شود؛ این سند قرارداد مدل است.
 **شمارش:** ۲۹ جدول (۱۱ سراسری + ۱۸ متعلق به tenant) · ۴۸ رابطه در ERD · ۲۴ FK مرکب tenant-aware.
 
 ## ۱) اصول کلی
@@ -97,7 +97,7 @@ erDiagram
 | 12 | comparison_runs | (tenant_id, base_list_id) | supplier_price_lists (tenant_id, id) |
 | 13 | comparison_runs | (tenant_id, target_list_id) | supplier_price_lists (tenant_id, id) |
 | 14 | comparison_matches | (tenant_id, run_id) | comparison_runs (tenant_id, id) |
-| 15 | comparison_matches | (tenant_id, base_price_id) | supplier_prices (tenant_id, id) |
+| 15 | comparison_matches | (tenant_id, base_price_id) nullable | supplier_prices (tenant_id, id) |
 | 16 | comparison_matches | (tenant_id, target_price_id) nullable | supplier_prices (tenant_id, id) |
 | 17 | comparison_matches | (tenant_id, suggested_product_id) nullable | products (tenant_id, id) |
 | 18 | comparison_matches | (tenant_id, confirmed_product_id) nullable | products (tenant_id, id) |
@@ -156,7 +156,7 @@ erDiagram
 
 **supplier_price_lists** — *هدف:* لیست قیمت دریافتی از تأمین‌کننده. id PK · tenant_id · supplier_id (FK مرکب) · title · received_at (date) · source (`manual`|`import`) · status (`draft`|`final`) · created_by FK→users · timestamps
 
-**supplier_prices** — *هدف:* ردیف‌های قیمت هر لیست — **تاریخچهٔ قیمت‌های پیشنهادی هر تأمین‌کننده** (هر لیستِ نهایی یک نسخهٔ زمانی است). id PK · tenant_id · price_list_id (FK مرکب) · product_id nullable (FK مرکب؛ پس از تطبیق) · raw_name · sku nullable · unit_price NUMERIC(20,2) ≥ 0 · currency (§۷) · created_at. **ستون supplier_id حذف شد** (تصمیم بازبینی نهایی): تأمین‌کننده همیشه از `supplier_price_lists.supplier_id` استخراج می‌شود — ردیفی که به لیست تأمین‌کنندهٔ A بپیوندد ساختاراً فقط می‌تواند قیمت همان A باشد. **یکتایی — دو قید صریح و اجراپذیر:**
+**supplier_prices** — *هدف:* ردیف‌های قیمت هر لیست — **تاریخچهٔ قیمت‌های پیشنهادی هر تأمین‌کننده** (هر لیستِ نهایی یک نسخهٔ زمانی است). id PK · tenant_id · price_list_id (FK مرکب) · product_id nullable (FK مرکب؛ پس از تطبیق) · raw_name · sku nullable · unit_price NUMERIC(20,2) ≥ 0 · unit nullable for legacy rows, required on new API writes (`piece`|`kg`|`liter`|`meter`|`box`) · currency (§۷) · created_at. **ستون supplier_id حذف شد** (تصمیم بازبینی نهایی): تأمین‌کننده همیشه از `supplier_price_lists.supplier_id` استخراج می‌شود — ردیفی که به لیست تأمین‌کنندهٔ A بپیوندد ساختاراً فقط می‌تواند قیمت همان A باشد. **یکتایی — دو قید صریح و اجراپذیر:**
 - `UNIQUE (price_list_id, sku) WHERE sku IS NOT NULL`
 - `UNIQUE (price_list_id, raw_name) WHERE sku IS NULL`
 (در هر لیست، sku یا raw_name یکتاست؛ دو ردیف با sku یکسان یا raw_name یکسان در یک لیست رد می‌شود.)
@@ -240,3 +240,7 @@ erDiagram
 - تغییر/حذف سوابق مالی فقط از مسیرهای کنترل‌شده: **هزینه‌ها** با ویرایش کنترل‌شده/soft-delete + Audit کامل (مقادیر قبل/بعد در `detail` ثبت می‌شود؛ ردیف حذف‌شده از استخرهای محاسبهٔ بعد از آن لحظه خارج می‌شود) — چون `calculations.input` مجموعهٔ کامل استخر را snapshot می‌کند، خروجی‌های قدیمی دقیقاً بازتولیدپذیر می‌مانند؛ گزارش‌ها مهر «داده تا تاریخ X» می‌خورند. **مرجوعی‌ها** تغییرناپذیرند (اصلاح فقط با سند جبرانی آینده).
 - بازتولید محاسبات تاریخی از snapshotهای `sale_items`، رکوردهای `sales_return_items`، `product_price_history` و `calculations.input` ممکن است — وابستگی به «دادهٔ فعلی» ممنوع (جزئیات: calculation-principles §۹).
 - دادهٔ ناقص هرگز عدد حدسی تولید نمی‌کند (warning + مقدار صریح).
+
+### Phase 4 Step 3 additive import schema details
+
+`imports` also carries nullable `supplier_id` (tenant-aware composite FK), `price_list_title` and `received_at` for supplier-price imports. A database check requires those fields for `kind='supplier_prices'` and prohibits a supplier link for other kinds. `imports.kind` reserves `sales` for the future sales-import workflow; the current API does not accept it. `import_rows` enforces `row_number > 1`, object-shaped `raw`/`normalized` JSONB and array-shaped `errors` JSONB. Optional JSONB values are stored as SQL NULL (not JSON `null`) so the database checks and idempotency response-state constraint remain meaningful.
