@@ -186,14 +186,24 @@
 
 ### 3.11 analytics
 
+All endpoints require `date_from` and `date_to` (inclusive ISO dates), reject reversed ranges and cap a request at 366 calendar days. All responses are tenant-scoped, use tenant currency, include `formula_version=FV-2` and a `data_through` timestamp, and persist immutable calculation-journal records (`source=report`).
+
 | Method | Path | مجوز | توضیح |
 |---|---|---|---|
-| GET | /analytics/summary | analytics:read | Revenue/Cost/Gross/Net/Margin + بازه |
-| GET | /analytics/products | analytics:read | سودآورترین/زیان‌ده‌ترین (اقلام cost-unknown جدا گزارش می‌شوند) |
-| GET | /analytics/trends | analytics:read | روند با group_by=day\|month |
-| GET | /analytics/expenses | analytics:read | تفکیک هزینه‌ها |
+| GET | /analytics/summary?date_from&date_to | analytics:read | Revenue, known/unknown-cost revenue, COGS, gross/net profit, margin/markup, units, returns/refunds, and included/excluded expense totals |
+| GET | /analytics/products?date_from&date_to | analytics:read | Per-product revenue, cost, profit, returns and direct/allocated expenses; each product result has its own `calc_type=product` journal record |
+| GET | /analytics/trends?date_from&date_to&group_by=day\|month | analytics:read | Revenue/refunds/COGS/expenses by event period |
+| GET | /analytics/expenses?date_from&date_to | analytics:read | Expense totals by type and allocation scope; product-scoped costs are visible but explicitly excluded from period-wide profit |
 
-> همهٔ اعداد analytics فقط از موتور `pricing` می‌آیند (قرارداد معماری §۵).
+Recognition and allocation rules:
+- Completed sales and their original COGS are recognized on `sales_orders.order_date`.
+- Physical return refunds and returned-unit COGS reversals are recognized on `sales_returns.return_date`, including returns of orders completed in earlier periods. They are not backdated into the originating sales period. Immutable return-item ledger rows are the source; mutable sale-item return caches are not used.
+- Independent refunds for cancelled-before-shipment orders are excluded from sales profit (ADR-028).
+- Order-scoped expenses are attributed to the completed order's sales period and allocated within that order. Expenses attached to cancelled orders are unallocated period costs on `expense_date`.
+- Period expenses are prorated by inclusive overlap days; product-scoped expenses are included only in product analytics and never double-counted in period-wide summary.
+- Currency mismatch is rejected; unknown unit cost remains unknown and never becomes zero.
+
+> All monetary calculations use the shared `pricing` FV-2 engine; frontend calculations are not authoritative.
 
 ### 3.12 reports
 
