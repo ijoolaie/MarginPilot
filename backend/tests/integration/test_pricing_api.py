@@ -3,9 +3,11 @@ from __future__ import annotations
 import uuid
 from datetime import date, timedelta
 from decimal import Decimal
+from io import BytesIO
 
 import pytest
 from fastapi.testclient import TestClient
+from openpyxl import load_workbook
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -495,5 +497,33 @@ def test_analytics_endpoints_share_fv2_and_scope_expenses() -> None:
         fractional_product = fractional_products.json()["data"]["products"][0]
         assert Decimal(fractional_product["units_sold"]) == Decimal("4.250")
         assert Decimal(fractional_product["returned_units"]) == Decimal("2.250")
+    finally:
+        client.close()
+
+
+def test_analytics_xlsx_export_contains_all_report_sheets() -> None:
+    client, headers, _tenant_id = _new_client()
+    try:
+        response = client.get(
+            "/api/v1/analytics/export.xlsx?date_from=2026-11-01&date_to=2026-11-21&group_by=day",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        assert response.headers["content-type"].startswith(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        assert (
+            "marginpilot-analytics-2026-11-01-2026-11-21.xlsx"
+            in response.headers["content-disposition"]
+        )
+        workbook = load_workbook(BytesIO(response.content), read_only=True, data_only=True)
+        assert workbook.sheetnames == ["Summary", "Products", "Trends", "Expenses", "Warnings"]
+        summary_rows = list(workbook["Summary"].iter_rows(values_only=True))
+        assert summary_rows[0] == ("Metric", "Value", "Currency")
+        assert ("Formula version", "FV-2", None) in summary_rows
+        assert list(workbook["Products"].iter_rows(values_only=True))[0][0] == "Product ID"
+        assert list(workbook["Trends"].iter_rows(values_only=True))[0][0] == "Period"
+        assert list(workbook["Expenses"].iter_rows(values_only=True))[0][0] == "Type"
+        workbook.close()
     finally:
         client.close()
