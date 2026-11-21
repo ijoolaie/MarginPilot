@@ -21,6 +21,7 @@ from app.core.config import get_settings
 from app.modules.audit.models import IdempotencyKey
 from app.modules.catalog.models import Product, ProductVariant
 from app.modules.catalog.service import add_audit, lock_tenant
+from app.modules.pricing.service import calculate_order
 from app.modules.sales.allocation import allocate_order_discount, post_line_discount_basis
 from app.modules.sales.models import (
     SaleItem,
@@ -1165,3 +1166,25 @@ def get_sales_order(
         .order_by(SaleItem.id)
     ).all()
     return {"data": _order_data(order, list(items))}
+
+
+@router.get("/orders/{order_id}/profit")
+def get_sales_order_profit(
+    order_id: int,
+    context: TenantContext = Depends(require_permission("pricing:read")),
+) -> dict[str, Any]:
+    try:
+        result = calculate_order(
+            context.auth.db,
+            tenant_id=context.tenant.id,
+            order_id=order_id,
+            user_id=context.auth.user.id,
+        )
+    except LookupError as exc:
+        context.auth.db.rollback()
+        raise HTTPException(status_code=404, detail="NOT_FOUND") from exc
+    except ValueError as exc:
+        context.auth.db.rollback()
+        detail = "CURRENCY_MISMATCH" if str(exc) == "CURRENCY_MISMATCH" else "CALCULATION_INVALID"
+        raise HTTPException(status_code=422, detail=detail) from exc
+    return {"data": result}

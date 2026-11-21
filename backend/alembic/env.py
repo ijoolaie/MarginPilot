@@ -13,6 +13,7 @@ from app.modules.comparison import models as comparison_models  # noqa: F401
 from app.modules.expenses import models as expense_models  # noqa: F401
 from app.modules.identity import models as identity_models  # noqa: F401
 from app.modules.imports import models as import_models  # noqa: F401
+from app.modules.pricing import models as pricing_models  # noqa: F401
 from app.modules.sales import models as sales_models  # noqa: F401
 from app.modules.tenancy import models as tenancy_models  # noqa: F401
 
